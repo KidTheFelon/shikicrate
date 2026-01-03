@@ -486,9 +486,7 @@ impl ShikicrateClient {
                     // Определяем задержку для retry
                     let retry_delay = if let ShikicrateError::RateLimit { retry_after, .. } = &e {
                         // Используем Retry-After заголовок если есть, иначе экспоненциальную задержку
-                        retry_after
-                            .map(Duration::from_secs)
-                            .unwrap_or(*delay)
+                        retry_after.map(Duration::from_secs).unwrap_or(*delay)
                     } else {
                         *delay
                     };

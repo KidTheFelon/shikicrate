@@ -519,7 +519,9 @@ pub struct UserRateSearchParams {
 
 impl ShikicrateClient {
     fn val_lim(limit: Option<i32>) -> Result<()> {
-        if let Some(limit) = limit && limit <= 0 {
+        if let Some(limit) = limit
+            && limit <= 0
+        {
             return Err(ShikicrateError::Validation(
                 "limit must be greater than 0".to_string(),
             ));
@@ -528,7 +530,9 @@ impl ShikicrateClient {
     }
 
     fn val_pg(page: Option<i32>) -> Result<()> {
-        if let Some(page) = page && page < 1 {
+        if let Some(page) = page
+            && page < 1
+        {
             return Err(ShikicrateError::Validation(
                 "page must be greater than or equal to 1".to_string(),
             ));
@@ -537,7 +541,9 @@ impl ShikicrateClient {
     }
 
     fn val_ids(ids: Option<&Vec<String>>) -> Result<()> {
-        if let Some(ids) = ids && ids.is_empty() {
+        if let Some(ids) = ids
+            && ids.is_empty()
+        {
             return Err(ShikicrateError::Validation(
                 "ids must not be empty".to_string(),
             ));
