@@ -118,15 +118,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(russian) = &person.russian {
             println!("     Русское имя: {}", russian);
         }
-        if let Some(is_seyu) = person.is_seyu {
-            if is_seyu {
-                println!("     Сейю");
-            }
+        if let Some(is_seyu) = person.is_seyu && is_seyu {
+            println!("     Сейю");
         }
-        if let Some(is_mangaka) = person.is_mangaka {
-            if is_mangaka {
-                println!("     Мангака");
-            }
+        if let Some(is_mangaka) = person.is_mangaka && is_mangaka {
+            println!("     Мангака");
         }
         println!();
     }
@@ -136,30 +132,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("📋 Тест 6: Детальная информация об аниме");
         println!("Аниме: {}\n", first_anime.name);
 
-        if let Some(genres) = &first_anime.genres {
-            if !genres.is_empty() {
-                println!("  Жанры:");
-                for genre in genres.iter().take(5) {
-                    println!("    - {}", genre.name);
-                }
-                println!();
+        if let Some(genres) = &first_anime.genres && !genres.is_empty() {
+            println!("  Жанры:");
+            for genre in genres.iter().take(5) {
+                println!("    - {}", genre.name);
             }
+            println!();
         }
 
-        if let Some(studios) = &first_anime.studios {
-            if !studios.is_empty() {
-                println!("  Студии:");
-                for studio in studios.iter() {
-                    println!("    - {}", studio.name);
-                }
-                println!();
+        if let Some(studios) = &first_anime.studios && !studios.is_empty() {
+            println!("  Студии:");
+            for studio in studios.iter() {
+                println!("    - {}", studio.name);
             }
+            println!();
         }
 
-        if let Some(aired_on) = &first_anime.aired_on {
-            if let Some(date) = &aired_on.date {
-                println!("  Дата выхода: {}", date);
-            }
+        if let Some(aired_on) = &first_anime.aired_on && let Some(date) = &aired_on.date {
+            println!("  Дата выхода: {}", date);
         }
 
         if let Some(description) = &first_anime.description {

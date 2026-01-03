@@ -177,11 +177,7 @@ impl ShikicrateClientBuilder {
     /// - `ShikicrateError::Validation` - если URL невалидный
     /// - `ShikicrateError::Http` - если не удалось создать HTTP клиент
     pub fn build(self) -> Result<ShikicrateClient> {
-        let base_url = self
-            .base_url
-            .as_ref()
-            .map(|s| s.as_str())
-            .unwrap_or(API_BASE_URL);
+        let base_url = self.base_url.as_deref().unwrap_or(API_BASE_URL);
         let timeout = self.timeout.unwrap_or(DEFAULT_TIMEOUT);
 
         // Валидация URL если он был задан кастомно
@@ -491,7 +487,7 @@ impl ShikicrateClient {
                     let retry_delay = if let ShikicrateError::RateLimit { retry_after, .. } = &e {
                         // Используем Retry-After заголовок если есть, иначе экспоненциальную задержку
                         retry_after
-                            .map(|secs| Duration::from_secs(secs))
+                            .map(Duration::from_secs)
                             .unwrap_or(*delay)
                     } else {
                         *delay
