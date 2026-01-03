@@ -356,12 +356,12 @@ pub struct AnimeSearchParams {
     ///
     /// Ищет по названию на русском, английском и японском языках.
     pub search: Option<String>,
-    
+
     /// Максимальное количество результатов.
     ///
     /// Должно быть больше 0. Если не указано, используется значение по умолчанию API.
     pub limit: Option<i32>,
-    
+
     /// Фильтр по типу аниме.
     ///
     /// Поддерживаемые значения: `"tv"`, `"movie"`, `"ova"`, `"ona"`, `"special"`, `"music"`.
@@ -390,12 +390,12 @@ pub struct MangaSearchParams {
     ///
     /// Должно быть больше 0. Если не указано, используется значение по умолчанию API.
     pub limit: Option<i32>,
-    
+
     /// Поисковый запрос (название манги).
     ///
     /// Ищет по названию на русском, английском и японском языках.
     pub search: Option<String>,
-    
+
     /// Фильтр по типу манги.
     ///
     /// Поддерживаемые значения: `"manga"`, `"novel"`, `"one_shot"`, `"doujin"`, `"manhwa"`, `"manhua"`.
@@ -422,7 +422,7 @@ pub struct PeopleSearchParams {
     ///
     /// Должно быть больше 0. Если не указано, используется значение по умолчанию API.
     pub limit: Option<i32>,
-    
+
     /// Поисковый запрос (имя человека).
     ///
     /// Ищет по имени на русском, английском и японском языках.
@@ -459,12 +459,12 @@ pub struct CharacterSearchParams {
     ///
     /// Должно быть >= 1. Используется только если `ids` не указан.
     pub page: Option<i32>,
-    
+
     /// Максимальное количество результатов на странице.
     ///
     /// Должно быть больше 0. Используется только если `ids` не указан.
     pub limit: Option<i32>,
-    
+
     /// Список ID персонажей для получения.
     ///
     /// Если указан, поиск выполняется по ID, игнорируя `page` и `limit`.
@@ -495,22 +495,22 @@ pub struct UserRateSearchParams {
     ///
     /// Должно быть >= 1.
     pub page: Option<i32>,
-    
+
     /// Максимальное количество результатов на странице.
     ///
     /// Должно быть больше 0.
     pub limit: Option<i32>,
-    
+
     /// Тип контента для фильтрации.
     ///
     /// Поддерживаемые значения: `"Anime"`, `"Manga"`.
     pub target_type: Option<String>,
-    
+
     /// Поле для сортировки.
     ///
     /// Поддерживаемые значения: `"updated_at"`, `"created_at"`, `"score"` и другие.
     pub order_field: Option<String>,
-    
+
     /// Направление сортировки.
     ///
     /// Поддерживаемые значения: `"asc"`, `"desc"`.
@@ -562,9 +562,7 @@ impl ShikicrateClient {
         F: FnOnce() -> serde_json::Value,
     {
         let variables = build_variables();
-        let response: serde_json::Value = self
-            .execute_query(&query, Some(variables))
-            .await?;
+        let response: serde_json::Value = self.execute_query(&query, Some(variables)).await?;
 
         let items = response
             .get(response_key)
@@ -572,8 +570,7 @@ impl ShikicrateClient {
             .cloned()
             .unwrap_or_default();
 
-        serde_json::from_value(json!(items))
-            .map_err(crate::error::ShikicrateError::Serialization)
+        serde_json::from_value(json!(items)).map_err(crate::error::ShikicrateError::Serialization)
     }
 
     fn build_vars(
@@ -593,7 +590,6 @@ impl ShikicrateClient {
         }
         variables
     }
-
 
     /// Выполняет поиск аниме по заданным параметрам.
     ///
@@ -639,7 +635,7 @@ impl ShikicrateClient {
     /// ```
     pub async fn animes(&self, params: AnimeSearchParams) -> Result<Vec<Anime>> {
         Self::val_lim(params.limit)?;
-        
+
         self.fetch(
             ANIMES_QUERY.to_string(),
             || {
@@ -698,10 +694,10 @@ impl ShikicrateClient {
     /// ```
     pub async fn mangas(&self, params: MangaSearchParams) -> Result<Vec<Manga>> {
         Self::val_lim(params.limit)?;
-        
+
         let mut query = MANGAS_QUERY.to_string();
         let mut variables = Self::build_vars(params.search.clone(), None, params.limit);
-        
+
         // Если kind не указан, нужно убрать его из запроса
         if params.kind.is_none() {
             query = query.replace("$kind: MangaKindString", "");
@@ -710,12 +706,7 @@ impl ShikicrateClient {
             variables["kind"] = json!(params.kind);
         }
 
-        self.fetch(
-            query,
-            || variables.clone(),
-            "mangas",
-        )
-        .await
+        self.fetch(query, || variables.clone(), "mangas").await
     }
 
     /// Выполняет поиск людей (сейю, мангаки, продюсеры и т.д.) по заданным параметрам.
@@ -761,7 +752,7 @@ impl ShikicrateClient {
     /// ```
     pub async fn people(&self, params: PeopleSearchParams) -> Result<Vec<PersonFull>> {
         Self::val_lim(params.limit)?;
-        
+
         self.fetch(
             PEOPLE_QUERY.to_string(),
             || Self::build_vars(params.search.clone(), None, params.limit),
@@ -822,7 +813,7 @@ impl ShikicrateClient {
         Self::val_pg(params.page)?;
         Self::val_lim(params.limit)?;
         Self::val_ids(params.ids.as_ref())?;
-        
+
         let query = if params.ids.is_some() {
             CHARACTERS_BY_IDS_QUERY.to_string()
         } else {
@@ -885,7 +876,7 @@ impl ShikicrateClient {
     pub async fn user_rates(&self, params: UserRateSearchParams) -> Result<Vec<UserRate>> {
         Self::val_pg(params.page)?;
         Self::val_lim(params.limit)?;
-        
+
         self.fetch(
             USER_RATES_QUERY.to_string(),
             || {

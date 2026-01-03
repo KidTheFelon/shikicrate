@@ -92,10 +92,10 @@
 
 pub mod client;
 pub mod error;
-pub mod types;
 pub mod queries;
+pub mod types;
 
 pub use client::{ShikicrateClient, ShikicrateClientBuilder};
-pub use error::{ShikicrateError, Result};
-pub use types::*;
+pub use error::{Result, ShikicrateError};
 pub use queries::*;
+pub use types::*;

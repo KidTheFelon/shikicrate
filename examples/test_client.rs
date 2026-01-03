@@ -9,7 +9,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Тест 1: Поиск аниме
     println!("📺 Тест 1: Поиск аниме");
     println!("Поиск: 'bakemono', лимит: 3, исключить спешлы\n");
-    
+
     let animes = client
         .animes(AnimeSearchParams {
             search: Some("bakemono".to_string()),
@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     println!("Найдено аниме: {}\n", animes.len());
-    
+
     for (i, anime) in animes.iter().enumerate() {
         println!("  {}. {} (ID: {})", i + 1, anime.name, anime.id);
         if let Some(russian) = &anime.russian {
@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Тест 2: Поиск манги
     println!("📚 Тест 2: Поиск манги");
     println!("Лимит: 5\n");
-    
+
     let mangas = client
         .mangas(MangaSearchParams {
             limit: Some(5),
@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     println!("Найдено манги: {}\n", mangas.len());
-    
+
     for (i, manga) in mangas.iter().take(3).enumerate() {
         println!("  {}. {} (ID: {})", i + 1, manga.name, manga.id);
         if let Some(russian) = &manga.russian {
@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Тест 3: Поиск персонажей
     println!("👤 Тест 3: Поиск персонажей");
     println!("Страница: 1, лимит: 5\n");
-    
+
     let characters = client
         .characters(CharacterSearchParams {
             page: Some(1),
@@ -72,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     println!("Найдено персонажей: {}\n", characters.len());
-    
+
     for (i, character) in characters.iter().take(3).enumerate() {
         println!("  {}. {} (ID: {})", i + 1, character.name, character.id);
         if let Some(russian) = &character.russian {
@@ -84,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Тест 4: Поиск персонажей по ID
     println!("🔍 Тест 4: Поиск персонажей по ID");
     println!("ID: [1, 2, 3]\n");
-    
+
     let characters_by_ids = client
         .characters(CharacterSearchParams {
             page: None,
@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     println!("Найдено персонажей: {}\n", characters_by_ids.len());
-    
+
     for character in &characters_by_ids {
         println!("  - {} (ID: {})", character.name, character.id);
     }
@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Тест 5: Поиск людей
     println!("👥 Тест 5: Поиск людей");
     println!("Лимит: 3\n");
-    
+
     let people = client
         .people(PeopleSearchParams {
             limit: Some(3),
@@ -112,7 +112,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     println!("Найдено людей: {}\n", people.len());
-    
+
     for (i, person) in people.iter().enumerate() {
         println!("  {}. {} (ID: {})", i + 1, person.name, person.id);
         if let Some(russian) = &person.russian {
@@ -135,7 +135,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(first_anime) = animes.first() {
         println!("📋 Тест 6: Детальная информация об аниме");
         println!("Аниме: {}\n", first_anime.name);
-        
+
         if let Some(genres) = &first_anime.genres {
             if !genres.is_empty() {
                 println!("  Жанры:");

@@ -48,7 +48,7 @@ pub enum ShikicrateError {
     /// - SSL/TLS ошибка
     #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
-    
+
     /// Ошибка GraphQL запроса.
     ///
     /// Возникает когда GraphQL API возвращает ошибку в поле `errors`
@@ -65,7 +65,7 @@ pub enum ShikicrateError {
         /// Полный массив ошибок GraphQL (для отладки).
         errors: Option<serde_json::Value>,
     },
-    
+
     /// Ошибка сериализации/десериализации JSON.
     ///
     /// Возникает при проблемах с преобразованием данных в/из JSON.
@@ -78,7 +78,7 @@ pub enum ShikicrateError {
     /// - Ошибка парсинга числа или строки
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    
+
     /// Ошибка API (неуспешный HTTP статус).
     ///
     /// Возникает когда сервер возвращает HTTP статус, отличный от 2xx.
@@ -88,25 +88,25 @@ pub enum ShikicrateError {
     /// - 500 Internal Server Error
     /// - 429 Too Many Requests (rate limiting)
     #[error("API error (status {status}): {message}")]
-    Api { 
+    Api {
         /// HTTP статус код.
         status: u16,
         /// Сообщение об ошибке.
         message: String,
     },
-    
+
     /// Ошибка rate limiting (429 Too Many Requests).
     ///
     /// Возникает при превышении лимита запросов к API.
     /// Эта ошибка может быть повторяемой (retryable) с задержкой.
     #[error("Rate limit exceeded: {message}")]
-    RateLimit { 
+    RateLimit {
         /// Сообщение об ошибке.
         message: String,
         /// Задержка до повторной попытки в секундах (если указана сервером).
         retry_after: Option<u64>,
     },
-    
+
     /// Ошибка валидации параметров запроса.
     ///
     /// Возникает при попытке выполнить запрос с невалидными параметрами

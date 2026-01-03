@@ -177,7 +177,9 @@ impl ShikicrateClientBuilder {
     /// - `ShikicrateError::Validation` - если URL невалидный
     /// - `ShikicrateError::Http` - если не удалось создать HTTP клиент
     pub fn build(self) -> Result<ShikicrateClient> {
-        let base_url = self.base_url.as_ref()
+        let base_url = self
+            .base_url
+            .as_ref()
             .map(|s| s.as_str())
             .unwrap_or(API_BASE_URL);
         let timeout = self.timeout.unwrap_or(DEFAULT_TIMEOUT);
@@ -186,19 +188,20 @@ impl ShikicrateClientBuilder {
         if let Some(ref url) = self.base_url {
             let parsed_url = Url::parse(url)
                 .map_err(|e| ShikicrateError::Validation(format!("Invalid URL: {}", e)))?;
-            
+
             match parsed_url.scheme() {
-                "http" | "https" => {},
+                "http" | "https" => {}
                 scheme => {
-                    return Err(ShikicrateError::Validation(
-                        format!("Unsafe URL scheme: {}. Only http:// and https:// are allowed", scheme)
-                    ));
+                    return Err(ShikicrateError::Validation(format!(
+                        "Unsafe URL scheme: {}. Only http:// and https:// are allowed",
+                        scheme
+                    )));
                 }
             }
-            
+
             if parsed_url.host().is_none() {
                 return Err(ShikicrateError::Validation(
-                    "URL must have a host".to_string()
+                    "URL must have a host".to_string(),
                 ));
             }
         }
@@ -313,24 +316,25 @@ impl ShikicrateClient {
         // Валидация URL для защиты от SSRF
         let parsed_url = Url::parse(&base_url)
             .map_err(|e| ShikicrateError::Validation(format!("Invalid URL: {}", e)))?;
-        
+
         // Проверка протокола (только http/https)
         match parsed_url.scheme() {
-            "http" | "https" => {},
+            "http" | "https" => {}
             scheme => {
-                return Err(ShikicrateError::Validation(
-                    format!("Unsafe URL scheme: {}. Only http:// and https:// are allowed", scheme)
-                ));
+                return Err(ShikicrateError::Validation(format!(
+                    "Unsafe URL scheme: {}. Only http:// and https:// are allowed",
+                    scheme
+                )));
             }
         }
-        
+
         // Проверка наличия хоста
         if parsed_url.host().is_none() {
             return Err(ShikicrateError::Validation(
-                "URL must have a host".to_string()
+                "URL must have a host".to_string(),
             ));
         }
-        
+
         Ok(Self {
             client: Self::mk_client(DEFAULT_TIMEOUT)?,
             base_url,
@@ -346,9 +350,7 @@ impl ShikicrateClient {
     /// Ошибки валидации, GraphQL ошибки и другие API ошибки (кроме 429) не повторяются.
     fn is_retryable(error: &ShikicrateError) -> bool {
         match error {
-            ShikicrateError::Http(e) => {
-                e.is_timeout() || e.is_connect() || e.is_request()
-            }
+            ShikicrateError::Http(e) => e.is_timeout() || e.is_connect() || e.is_request(),
             ShikicrateError::RateLimit { .. } => true,
             _ => false,
         }
@@ -385,7 +387,7 @@ impl ShikicrateClient {
             .await?;
 
         let status = response.status();
-        
+
         // Считываем заголовки до чтения тела
         let retry_after_header = if status == 429 {
             response
@@ -396,7 +398,7 @@ impl ShikicrateClient {
         } else {
             None
         };
-        
+
         let text = response.text().await?;
 
         if !status.is_success() {
@@ -407,7 +409,7 @@ impl ShikicrateClient {
                     retry_after: retry_after_header,
                 });
             }
-            
+
             return Err(ShikicrateError::Api {
                 status: status.as_u16(),
                 message: format!("HTTP {}: {}", status, text),
@@ -430,7 +432,7 @@ impl ShikicrateClient {
                         .collect()
                 })
                 .unwrap_or_default();
-            
+
             let error_msg = if error_messages.is_empty() {
                 "Unknown GraphQL error".to_string()
             } else if error_messages.len() == 1 {
@@ -445,12 +447,10 @@ impl ShikicrateClient {
             });
         }
 
-        let data = json
-            .get("data")
-            .ok_or_else(|| ShikicrateError::GraphQL {
-                message: "No data in response".to_string(),
-                errors: None,
-            })?;
+        let data = json.get("data").ok_or_else(|| ShikicrateError::GraphQL {
+            message: "No data in response".to_string(),
+            errors: None,
+        })?;
 
         serde_json::from_value(data.clone()).map_err(ShikicrateError::from)
     }
@@ -475,7 +475,11 @@ impl ShikicrateClient {
     /// - Retry только для сетевых ошибок (таймауты, ошибки подключения)
     /// - Задержки между попытками: 1 секунда, 2 секунды, 4 секунды
     /// - Ошибки валидации, GraphQL и API ошибки возвращаются немедленно без retry
-    pub(crate) async fn execute_query<T>(&self, query: &str, variables: Option<serde_json::Value>) -> Result<T>
+    pub(crate) async fn execute_query<T>(
+        &self,
+        query: &str,
+        variables: Option<serde_json::Value>,
+    ) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -492,12 +496,12 @@ impl ShikicrateClient {
                     } else {
                         *delay
                     };
-                    
+
                     // Если это последняя попытка, возвращаем ошибку сразу
                     if attempt >= RETRY_DELAYS.len() - 1 {
                         return Err(e);
                     }
-                    
+
                     tokio::time::sleep(retry_delay).await;
                 }
                 Err(e) => return Err(e),
