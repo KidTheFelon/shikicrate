@@ -6,8 +6,12 @@ authors = ["KidTheFelon <kidneyfelon@gmail.com>"]
 description = "Rust client for Shikimori GraphQL API"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/KidTheFelon/shikicrate"
+readme = "README.md"
 keywords = ["shikimori", "anime", "manga", "graphql", "api"]
 categories = ["api-bindings", "web-programming"]
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 reqwest = { version = "0.13.1", features = ["json", "rustls"] }

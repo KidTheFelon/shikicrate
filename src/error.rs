@@ -58,8 +58,13 @@ pub enum ShikicrateError {
     /// - Невалидный GraphQL запрос
     /// - Ошибка валидации на стороне сервера
     /// - Отсутствие данных в ответе
-    #[error("GraphQL error: {0}")]
-    GraphQL(String),
+    #[error("GraphQL error: {message}")]
+    GraphQL {
+        /// Сообщение об ошибке.
+        message: String,
+        /// Полный массив ошибок GraphQL (для отладки).
+        errors: Option<serde_json::Value>,
+    },
     
     /// Ошибка сериализации/десериализации JSON.
     ///
@@ -81,9 +86,26 @@ pub enum ShikicrateError {
     /// # Примеры ситуаций
     /// - 404 Not Found
     /// - 500 Internal Server Error
-    /// - 429 Too Many Requests
-    #[error("API error: {message}")]
-    Api { message: String },
+    /// - 429 Too Many Requests (rate limiting)
+    #[error("API error (status {status}): {message}")]
+    Api { 
+        /// HTTP статус код.
+        status: u16,
+        /// Сообщение об ошибке.
+        message: String,
+    },
+    
+    /// Ошибка rate limiting (429 Too Many Requests).
+    ///
+    /// Возникает при превышении лимита запросов к API.
+    /// Эта ошибка может быть повторяемой (retryable) с задержкой.
+    #[error("Rate limit exceeded: {message}")]
+    RateLimit { 
+        /// Сообщение об ошибке.
+        message: String,
+        /// Задержка до повторной попытки в секундах (если указана сервером).
+        retry_after: Option<u64>,
+    },
     
     /// Ошибка валидации параметров запроса.
     ///

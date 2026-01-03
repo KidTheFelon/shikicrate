@@ -594,16 +594,6 @@ impl ShikicrateClient {
         variables
     }
 
-    fn inject_kind(query: String, query_pattern: &str, kind: &str) -> String {
-        let replacement = format!("{}, kind: {})", query_pattern, kind);
-        let result = query.replacen(query_pattern, &replacement, 1);
-        
-        if result == query {
-            eprintln!("Warning: Failed to inject kind filter '{}' into query", kind);
-        }
-        
-        result
-    }
 
     /// Выполняет поиск аниме по заданным параметрам.
     ///
@@ -650,16 +640,15 @@ impl ShikicrateClient {
     pub async fn animes(&self, params: AnimeSearchParams) -> Result<Vec<Anime>> {
         Self::val_lim(params.limit)?;
         
-        let mut query = ANIMES_QUERY.to_string();
-        
-        // kind нужно вставлять напрямую в запрос, т.к. это AnimeKindString, а не String
-        if let Some(kind) = &params.kind {
-            query = Self::inject_kind(query, "animes(search: $search, limit: $limit)", kind);
-        }
-
         self.fetch(
-            query,
-            || Self::build_vars(params.search.clone(), None, params.limit),
+            ANIMES_QUERY.to_string(),
+            || {
+                let mut vars = Self::build_vars(params.search.clone(), None, params.limit);
+                if let Some(kind) = &params.kind {
+                    vars["kind"] = json!(kind);
+                }
+                vars
+            },
             "animes",
         )
         .await

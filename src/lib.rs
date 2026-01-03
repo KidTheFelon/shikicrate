@@ -19,7 +19,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Создание клиента
+//!     // Создание клиента с настройками по умолчанию
 //!     let client = ShikicrateClient::new()?;
 //!
 //!     // Поиск аниме
@@ -37,6 +37,25 @@
 //! }
 //! ```
 //!
+//! ## Настройка клиента через Builder
+//!
+//! ```no_run
+//! use shikicrate::{ShikicrateClientBuilder, queries::*};
+//! use std::time::Duration;
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Создание клиента с кастомными настройками
+//!     let client = ShikicrateClientBuilder::new()
+//!         .timeout(Duration::from_secs(60))
+//!         .base_url("https://shikimori.one/api/graphql".to_string())
+//!         .build()?;
+//!
+//!     // Использование клиента...
+//!     Ok(())
+//! }
+//! ```
+//!
 //! ## Модули
 //!
 //! - [`client`] - HTTP клиент для выполнения GraphQL запросов
@@ -46,10 +65,14 @@
 //!
 //! ## Retry логика
 //!
-//! Клиент автоматически повторяет запросы при сетевых ошибках (таймауты, ошибки подключения)
-//! до 3 раз с экспоненциальной задержкой: 1 секунда, 2 секунды, 4 секунды.
+//! Клиент автоматически повторяет запросы при следующих ошибках:
+//! - Сетевые ошибки (таймауты, ошибки подключения, ошибки запроса)
+//! - Rate limiting (429 Too Many Requests) - с учетом заголовка `Retry-After`
 //!
-//! Ошибки валидации, GraphQL ошибки и API ошибки (неуспешные HTTP статусы) не повторяются.
+//! Retry выполняется до 3 раз с экспоненциальной задержкой: 1 секунда, 2 секунды, 4 секунды.
+//! Для rate limiting используется значение из заголовка `Retry-After`, если оно указано.
+//!
+//! Ошибки валидации, GraphQL ошибки и другие API ошибки (неуспешные HTTP статусы, кроме 429) не повторяются.
 //!
 //! ## Валидация параметров
 //!
@@ -72,7 +95,7 @@ pub mod error;
 pub mod types;
 pub mod queries;
 
-pub use client::ShikicrateClient;
+pub use client::{ShikicrateClient, ShikicrateClientBuilder};
 pub use error::{ShikicrateError, Result};
 pub use types::*;
 pub use queries::*;

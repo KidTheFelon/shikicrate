@@ -128,6 +128,58 @@ cargo run --example test_client
 - Поиск людей
 - Вывод детальной информации
 
+## Настройка клиента
+
+### С помощью Builder
+
+```rust
+use shikicrate::ShikicrateClientBuilder;
+use std::time::Duration;
+
+let client = ShikicrateClientBuilder::new()
+    .timeout(Duration::from_secs(60))
+    .base_url("https://shikimori.one/api/graphql".to_string())
+    .build()?;
+```
+
+### Прямое создание
+
+```rust
+use shikicrate::ShikicrateClient;
+
+// С настройками по умолчанию
+let client = ShikicrateClient::new()?;
+
+// С кастомным таймаутом
+let client = ShikicrateClient::with_timeout(Duration::from_secs(60))?;
+
+// С кастомным URL
+let client = ShikicrateClient::with_base_url("https://api.example.com/graphql".to_string())?;
+```
+
+## Обработка ошибок
+
+Клиент автоматически обрабатывает:
+- **Rate limiting (429)**: повторяет запрос с учетом заголовка `Retry-After`
+- **Сетевые ошибки**: повторяет до 3 раз с экспоненциальной задержкой
+- **GraphQL ошибки**: возвращает все сообщения об ошибках
+- **Валидация**: проверяет параметры запроса перед отправкой
+
+```rust
+use shikicrate::{ShikicrateError, Result};
+
+match client.animes(params).await {
+    Err(ShikicrateError::RateLimit { retry_after, .. }) => {
+        println!("Rate limit, retry after: {:?} seconds", retry_after);
+    }
+    Err(ShikicrateError::Validation(msg)) => {
+        println!("Validation error: {}", msg);
+    }
+    Ok(animes) => println!("Found {} animes", animes.len()),
+    Err(e) => eprintln!("Error: {}", e),
+}
+```
+
 ## Тестирование
 
 ```bash
