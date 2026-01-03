@@ -6,7 +6,7 @@ authors = ["KidTheFelon <kidneyfelon@gmail.com>"]
 description = "Rust client for Shikimori GraphQL API"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/KidTheFelon/shikicrate"
-keywords = ["shikimori", "anime", "manga", "graphql", "api", "client"]
+keywords = ["shikimori", "anime", "manga", "graphql", "api"]
 categories = ["api-bindings", "web-programming"]
 
 [dependencies]
