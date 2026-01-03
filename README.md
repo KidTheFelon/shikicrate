@@ -1,26 +1,28 @@
-# Shikicrate GraphQL Client
+# Shikicrate
 
-Rust клиент для работы с GraphQL API Shikimori.
+Rust клиент для Shikimori GraphQL API. Потому что парсить JSON руками — это прошлый век.
+
+## Что это вообще такое?
+
+Нужен доступ к аниме, манге, персонажам и прочей японской культуре через Shikimori? Не хочешь писать GraphQL запросы вручную? Добро пожаловать. Клиент сам разберется с retry-логикой, rate limiting и прочими радостями жизни.
 
 ## Установка
 
-Добавь в `Cargo.toml`:
+Кидай в `Cargo.toml`:
 
 ```toml
 [dependencies]
-shikicrate = "0.1.0"
+shikicrate = "0.1.1"
 ```
 
-Или для локальной разработки:
+Или для локальной разработки (если хочешь поковырять код):
 
 ```toml
 [dependencies]
-shikicrate = { path = "../shikimori" }
+shikicrate = { path = "../shikicrate" }
 ```
 
-## Использование
-
-### Базовый пример
+## Быстрый старт
 
 ```rust
 use shikicrate::{ShikicrateClient, queries::*};
@@ -29,7 +31,7 @@ use shikicrate::{ShikicrateClient, queries::*};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = ShikicrateClient::new()?;
     
-    // Поиск аниме
+    // Ищем Наруто (или что там тебе нужно)
     let params = AnimeSearchParams {
         search: Some("naruto".to_string()),
         limit: Some(10),
@@ -46,7 +48,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### Поиск манги
+## Что умеет
+
+### Аниме
+
+```rust
+let params = AnimeSearchParams {
+    limit: Some(10),
+    search: Some("naruto".to_string()),
+    kind: None,
+};
+
+let animes = client.animes(params).await?;
+```
+
+### Манга
 
 ```rust
 let params = MangaSearchParams {
@@ -58,10 +74,12 @@ let params = MangaSearchParams {
 let mangas = client.mangas(params).await?;
 ```
 
-### Поиск персонажей
+### Персонажи
+
+Можно искать по странице, можно по ID — как удобнее:
 
 ```rust
-// Поиск по странице
+// По странице
 let params = CharacterSearchParams {
     page: Some(1),
     limit: Some(20),
@@ -70,7 +88,7 @@ let params = CharacterSearchParams {
 
 let characters = client.characters(params).await?;
 
-// Поиск по ID
+// Или по ID (если знаешь, кого ищешь)
 let params = CharacterSearchParams {
     page: None,
     limit: None,
@@ -80,7 +98,7 @@ let params = CharacterSearchParams {
 let characters = client.characters(params).await?;
 ```
 
-### Поиск людей
+### Люди (режиссеры, сценаристы и прочие)
 
 ```rust
 let params = PeopleSearchParams {
@@ -91,7 +109,7 @@ let params = PeopleSearchParams {
 let people = client.people(params).await?;
 ```
 
-### Поиск пользовательских оценок
+### Пользовательские оценки
 
 ```rust
 let params = UserRateSearchParams {
@@ -105,32 +123,9 @@ let params = UserRateSearchParams {
 let user_rates = client.user_rates(params).await?;
 ```
 
-## Структура проекта
-
-- `src/client.rs` - HTTP клиент для выполнения GraphQL запросов
-- `src/error.rs` - Типы ошибок
-- `src/types.rs` - Типы данных (Anime, Manga, Character, Person и т.д.)
-- `src/queries.rs` - Методы для выполнения запросов
-- `animes`, `mangas`, `characters`, `people`, `userrates` - GraphQL запросы
-
-## Пример использования
-
-Запусти пример приложения для проверки работоспособности:
-
-```bash
-cargo run --example test_client
-```
-
-Пример демонстрирует:
-- Поиск аниме с фильтрами
-- Поиск манги
-- Поиск персонажей (по странице и по ID)
-- Поиск людей
-- Вывод детальной информации
-
 ## Настройка клиента
 
-### С помощью Builder
+### Builder (если любишь цепочки методов)
 
 ```rust
 use shikicrate::ShikicrateClientBuilder;
@@ -142,28 +137,28 @@ let client = ShikicrateClientBuilder::new()
     .build()?;
 ```
 
-### Прямое создание
+### Прямое создание (если не любишь)
 
 ```rust
 use shikicrate::ShikicrateClient;
 
-// С настройками по умолчанию
+// Дефолтные настройки (30 секунд таймаут)
 let client = ShikicrateClient::new()?;
 
 // С кастомным таймаутом
 let client = ShikicrateClient::with_timeout(Duration::from_secs(60))?;
 
-// С кастомным URL
+// С кастомным URL (если у тебя свой инстанс)
 let client = ShikicrateClient::with_base_url("https://api.example.com/graphql".to_string())?;
 ```
 
 ## Обработка ошибок
 
-Клиент автоматически обрабатывает:
-- **Rate limiting (429)**: повторяет запрос с учетом заголовка `Retry-After`
-- **Сетевые ошибки**: повторяет до 3 раз с экспоненциальной задержкой
+Клиент сам разбирается с:
+- **Rate limiting (429)**: ждет `Retry-After` и повторяет запрос
+- **Сетевые ошибки**: ретраит до 3 раз с экспоненциальной задержкой (1s → 2s → 4s)
 - **GraphQL ошибки**: возвращает все сообщения об ошибках
-- **Валидация**: проверяет параметры запроса перед отправкой
+- **Валидация**: проверяет параметры до отправки (чтобы не тратить время зря)
 
 ```rust
 use shikicrate::{ShikicrateError, Result};
@@ -180,7 +175,30 @@ match client.animes(params).await {
 }
 ```
 
-## Тестирование
+## Примеры
+
+Запусти пример, чтобы посмотреть, как это работает:
+
+```bash
+cargo run --example test_client
+```
+
+Там показывается:
+- Поиск аниме с фильтрами
+- Поиск манги
+- Поиск персонажей (по странице и по ID)
+- Поиск людей
+- Вывод детальной информации
+
+## Структура проекта
+
+- `src/client.rs` — HTTP клиент, который делает всю грязную работу
+- `src/error.rs` — типы ошибок (чтобы знать, что пошло не так)
+- `src/types.rs` — типы данных (Anime, Manga, Character, Person и т.д.)
+- `src/queries.rs` — методы для выполнения запросов
+- `animes`, `mangas`, `characters`, `people`, `userrates` — GraphQL запросы
+
+## Тесты
 
 ```bash
 cargo test
@@ -188,4 +206,4 @@ cargo test
 
 ## Лицензия
 
-MIT OR Apache-2.0
+MIT OR Apache-2.0 — используй как хочешь.
