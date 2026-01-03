@@ -1,5 +1,10 @@
 # Shikicrate
 
+[![crates.io](https://img.shields.io/crates/v/shikicrate.svg)](https://crates.io/crates/shikicrate)
+[![docs.rs](https://docs.rs/shikicrate/badge.svg)](https://docs.rs/shikicrate)
+[![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
+[![CI](https://github.com/KidTheFelon/shikicrate/workflows/CI/badge.svg)](https://github.com/KidTheFelon/shikicrate/actions)
+
 Rust клиент для Shikimori GraphQL API. Потому что парсить JSON руками — это прошлый век.
 
 ## Что это вообще такое?
