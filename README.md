@@ -17,7 +17,7 @@ Rust клиент для Shikimori GraphQL API. Потому что парсит
 
 ```toml
 [dependencies]
-shikicrate = "0.1.1"
+shikicrate = "<актуальная версия>"
 ```
 
 Или для локальной разработки (если хочешь поковырять код):
