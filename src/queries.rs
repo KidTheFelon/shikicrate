@@ -715,6 +715,37 @@ impl ShikicrateClient {
         variables
     }
 
+    /// Фильтрует аниме по поисковому запросу.
+    ///
+    /// Проверяет наличие поискового запроса (case-insensitive) в полях:
+    /// name, russian, english, japanese, synonyms.
+    fn filter_animes_by_search(animes: Vec<Anime>, search: &str) -> Vec<Anime> {
+        let search_lower = search.to_lowercase();
+        animes
+            .into_iter()
+            .filter(|anime| {
+                // Проверяем name
+                anime.name.to_lowercase().contains(&search_lower) ||
+                // Проверяем russian
+                anime.russian.as_ref()
+                    .map(|r| r.to_lowercase().contains(&search_lower))
+                    .unwrap_or(false) ||
+                // Проверяем english
+                anime.english.as_ref()
+                    .map(|e| e.to_lowercase().contains(&search_lower))
+                    .unwrap_or(false) ||
+                // Проверяем japanese
+                anime.japanese.as_ref()
+                    .map(|j| j.to_lowercase().contains(&search_lower))
+                    .unwrap_or(false) ||
+                // Проверяем synonyms
+                anime.synonyms.as_ref()
+                    .map(|syns| syns.iter().any(|s| s.to_lowercase().contains(&search_lower)))
+                    .unwrap_or(false)
+            })
+            .collect()
+    }
+
     /// Выполняет поиск аниме по заданным параметрам.
     ///
     /// Возвращает список аниме, соответствующих критериям поиска.
@@ -762,18 +793,27 @@ impl ShikicrateClient {
         Self::val_lim(params.limit)?;
         Self::val_pg(params.page)?;
 
-        self.fetch(
-            ANIMES_QUERY.to_string(),
-            || {
-                let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
-                if let Some(kind) = &params.kind {
-                    vars["kind"] = json!(kind);
-                }
-                vars
-            },
-            "animes",
-        )
-        .await
+        let mut animes = self
+            .fetch(
+                ANIMES_QUERY.to_string(),
+                || {
+                    let mut vars =
+                        Self::build_vars(params.search.clone(), params.page, params.limit);
+                    if let Some(kind) = &params.kind {
+                        vars["kind"] = json!(kind);
+                    }
+                    vars
+                },
+                "animes",
+            )
+            .await?;
+
+        // Применяем клиентскую фильтрацию, если передан поисковый запрос
+        if let Some(ref search) = params.search {
+            animes = Self::filter_animes_by_search(animes, search);
+        }
+
+        Ok(animes)
     }
 
     /// Выполняет поиск манги по заданным параметрам.
@@ -1097,5 +1137,148 @@ mod tests {
         assert_eq!(vars["search"], "test");
         assert_eq!(vars["page"], 2);
         assert_eq!(vars["limit"], 10);
+    }
+
+    fn create_test_anime(id: i64, name: String) -> Anime {
+        Anime {
+            id,
+            mal_id: None,
+            name,
+            russian: None,
+            license_name_ru: None,
+            english: None,
+            japanese: None,
+            synonyms: None,
+            kind: None,
+            rating: None,
+            score: None,
+            status: None,
+            episodes: None,
+            episodes_aired: None,
+            duration: None,
+            aired_on: None,
+            released_on: None,
+            url: None,
+            season: None,
+            poster: None,
+            fansubbers: None,
+            fandubbers: None,
+            licensors: None,
+            created_at: None,
+            updated_at: None,
+            next_episode_at: None,
+            is_censored: None,
+            genres: None,
+            studios: None,
+            external_links: None,
+            person_roles: None,
+            character_roles: None,
+            related: None,
+            videos: None,
+            screenshots: None,
+            scores_stats: None,
+            statuses_stats: None,
+            description: None,
+            description_html: None,
+            description_source: None,
+        }
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_name() {
+        let animes = vec![
+            create_test_anime(1, "Naruto".to_string()),
+            create_test_anime(2, "One Piece".to_string()),
+        ];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "naruto");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, 1);
+        assert_eq!(filtered[0].name, "Naruto");
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_case_insensitive() {
+        let animes = vec![
+            create_test_anime(1, "Naruto".to_string()),
+            create_test_anime(2, "ONE PIECE".to_string()),
+        ];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "NARUTO");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, 1);
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_russian() {
+        let mut anime1 = create_test_anime(1, "Test".to_string());
+        anime1.russian = Some("Наруто".to_string());
+        let anime2 = create_test_anime(2, "Other".to_string());
+        let animes = vec![anime1, anime2];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "наруто");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, 1);
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_english() {
+        let mut anime1 = create_test_anime(1, "Test".to_string());
+        anime1.english = Some("Naruto Shippuden".to_string());
+        let anime2 = create_test_anime(2, "Other".to_string());
+        let animes = vec![anime1, anime2];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "naruto");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, 1);
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_japanese() {
+        let mut anime1 = create_test_anime(1, "Test".to_string());
+        anime1.japanese = Some("ナルト".to_string());
+        let anime2 = create_test_anime(2, "Other".to_string());
+        let animes = vec![anime1, anime2];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "ナルト");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, 1);
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_synonyms() {
+        let mut anime1 = create_test_anime(1, "Test".to_string());
+        anime1.synonyms = Some(vec!["Naruto".to_string(), "Other".to_string()]);
+        let anime2 = create_test_anime(2, "Other".to_string());
+        let animes = vec![anime1, anime2];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "naruto");
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].id, 1);
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_no_match() {
+        let animes = vec![
+            create_test_anime(1, "One Piece".to_string()),
+            create_test_anime(2, "Dragon Ball".to_string()),
+        ];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "naruto");
+        assert_eq!(filtered.len(), 0);
+    }
+
+    #[test]
+    fn test_filter_animes_by_search_multiple_matches() {
+        let animes = vec![
+            create_test_anime(1, "Naruto".to_string()),
+            create_test_anime(2, "Naruto Shippuden".to_string()),
+            create_test_anime(3, "One Piece".to_string()),
+        ];
+
+        let filtered = ShikicrateClient::filter_animes_by_search(animes, "naruto");
+        assert_eq!(filtered.len(), 2);
+        assert_eq!(filtered[0].id, 1);
+        assert_eq!(filtered[1].id, 2);
     }
 }
