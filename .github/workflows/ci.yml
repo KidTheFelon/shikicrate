@@ -34,6 +34,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
       
+      - name: Update dependencies
+        run: cargo update
+      
       - name: Check formatting
         run: cargo fmt --all -- --check
       

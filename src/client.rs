@@ -490,8 +490,11 @@ impl ShikicrateClient {
         for (attempt, delay) in RETRY_DELAYS.iter().enumerate() {
             // Определяем задержку для retry
             let retry_delay = if let ShikicrateError::RateLimit { retry_after, .. } = &last_error {
-                // Используем Retry-After заголовок если есть, иначе экспоненциальную задержку
-                retry_after.map(Duration::from_secs).unwrap_or(*delay)
+                // Используем Retry-After заголовок если есть, но ограничиваем максимумом 60 секунд
+                // чтобы избежать слишком долгих ожиданий
+                retry_after
+                    .map(|s| Duration::from_secs(s.min(60)))
+                    .unwrap_or(*delay)
             } else {
                 *delay
             };

@@ -917,9 +917,12 @@ impl ShikicrateClient {
     /// # }
     /// ```
     pub async fn characters(&self, params: CharacterSearchParams) -> Result<Vec<CharacterFull>> {
-        Self::val_pg(params.page)?;
-        Self::val_lim(params.limit)?;
-        Self::val_ids(params.ids.as_ref())?;
+        if params.ids.is_some() {
+            Self::val_ids(params.ids.as_ref())?;
+        } else {
+            Self::val_pg(params.page)?;
+            Self::val_lim(params.limit)?;
+        }
 
         let query = if params.ids.is_some() {
             CHARACTERS_BY_IDS_QUERY.to_string()
