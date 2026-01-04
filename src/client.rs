@@ -467,7 +467,7 @@ impl ShikicrateClient {
     ///
     /// # Поведение retry
     ///
-    /// - Максимум 3 попытки
+    /// - Максимум 3 retry (всего 4 попытки)
     /// - Retry только для сетевых ошибок (таймауты, ошибки подключения)
     /// - Задержки между попытками: 1 секунда, 2 секунды, 4 секунды
     /// - Ошибки валидации, GraphQL и API ошибки возвращаются немедленно без retry
@@ -479,36 +479,39 @@ impl ShikicrateClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        // Первая попытка
+        let mut last_error = match self.exec_once(query, variables.clone()).await {
+            Ok(result) => return Ok(result),
+            Err(e) if !Self::is_retryable(&e) => return Err(e),
+            Err(e) => e,
+        };
+
+        // Retry с задержками
         for (attempt, delay) in RETRY_DELAYS.iter().enumerate() {
+            // Определяем задержку для retry
+            let retry_delay = if let ShikicrateError::RateLimit { retry_after, .. } = &last_error {
+                // Используем Retry-After заголовок если есть, иначе экспоненциальную задержку
+                retry_after.map(Duration::from_secs).unwrap_or(*delay)
+            } else {
+                *delay
+            };
+
+            tokio::time::sleep(retry_delay).await;
+
             match self.exec_once(query, variables.clone()).await {
                 Ok(result) => return Ok(result),
                 Err(e) if Self::is_retryable(&e) => {
-                    // Определяем задержку для retry
-                    let retry_delay = if let ShikicrateError::RateLimit { retry_after, .. } = &e {
-                        // Используем Retry-After заголовок если есть, иначе экспоненциальную задержку
-                        retry_after.map(Duration::from_secs).unwrap_or(*delay)
-                    } else {
-                        *delay
-                    };
-
-                    // Если это последняя попытка, возвращаем ошибку сразу
+                    last_error = e;
+                    // Если это последняя попытка, возвращаем ошибку
                     if attempt >= RETRY_DELAYS.len() - 1 {
-                        return Err(e);
+                        return Err(last_error);
                     }
-
-                    tokio::time::sleep(retry_delay).await;
                 }
                 Err(e) => return Err(e),
             }
         }
 
-        // Этот код недостижим: цикл всегда возвращает значение через return
-        // Последняя попытка возвращает ошибку, успешные запросы возвращают Ok,
-        // не-retryable ошибки возвращаются сразу
-        unreachable!(
-            "Retry loop should always return: success returns Ok, last attempt returns Err, \
-             non-retryable errors return immediately"
-        )
+        Err(last_error)
     }
 }
 
