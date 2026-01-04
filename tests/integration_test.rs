@@ -8,6 +8,7 @@ async fn test_search_animes() -> Result<()> {
         search: Some("bakemono".to_string()),
         limit: Some(1),
         kind: Some("!special".to_string()),
+        page: None,
     };
 
     let animes = client.animes(params).await?;
@@ -33,6 +34,7 @@ async fn test_search_mangas() -> Result<()> {
         limit: Some(5),
         search: None,
         kind: None,
+        page: None,
     };
 
     let mangas = client.mangas(params).await?;

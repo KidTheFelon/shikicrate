@@ -1,6 +1,7 @@
 use crate::error::{Result, ShikicrateError};
 use reqwest::Client;
 use serde_json::json;
+use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
 
@@ -515,6 +516,18 @@ impl ShikicrateClient {
         }
 
         Err(last_error)
+    }
+
+    /// Преобразует клиент в Arc для использования в пагинаторах.
+    ///
+    /// Создает новый Arc, клонируя base_url и создавая новый HTTP клиент.
+    /// Это необходимо для использования в async стримах, которые требуют owned значения.
+    pub(crate) fn to_arc(&self) -> Arc<Self> {
+        Arc::new(Self {
+            client: Self::mk_client(DEFAULT_TIMEOUT)
+                .expect("Failed to create HTTP client for pagination"),
+            base_url: self.base_url.clone(),
+        })
     }
 }
 

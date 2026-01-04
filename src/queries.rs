@@ -4,8 +4,8 @@ use crate::types::*;
 use serde_json::json;
 
 const ANIMES_QUERY: &str = r#"
-  query SearchAnimes($search: String, $limit: Int, $kind: AnimeKindString) {
-    animes(search: $search, limit: $limit, kind: $kind) {
+  query SearchAnimes($search: String, $limit: Int, $page: Int, $kind: AnimeKindString) {
+    animes(search: $search, limit: $limit, page: $page, kind: $kind) {
       id
       malId
       name
@@ -132,8 +132,8 @@ const ANIMES_QUERY: &str = r#"
 "#;
 
 const MANGAS_QUERY: &str = r#"
-  query SearchMangas($search: String, $limit: Int) {
-    mangas(search: $search, limit: $limit) {
+  query SearchMangas($search: String, $limit: Int, $page: Int) {
+    mangas(search: $search, limit: $limit, page: $page) {
       id
       malId
       name
@@ -239,8 +239,8 @@ const MANGAS_QUERY: &str = r#"
 "#;
 
 const MANGAS_WITH_KIND_QUERY: &str = r#"
-  query SearchMangas($search: String, $limit: Int, $kind: MangaKindString) {
-    mangas(search: $search, limit: $limit, kind: $kind) {
+  query SearchMangas($search: String, $limit: Int, $page: Int, $kind: MangaKindString) {
+    mangas(search: $search, limit: $limit, page: $page, kind: $kind) {
       id
       malId
       name
@@ -458,6 +458,7 @@ const USER_RATES_QUERY: &str = r#"
 ///     kind: Some("!special".to_string()),
 /// };
 /// ```
+#[derive(Clone)]
 pub struct AnimeSearchParams {
     /// Поисковый запрос (название аниме).
     ///
@@ -474,6 +475,11 @@ pub struct AnimeSearchParams {
     /// Поддерживаемые значения: `"tv"`, `"movie"`, `"ova"`, `"ona"`, `"special"`, `"music"`.
     /// Можно использовать префикс `!` для исключения типа (например, `"!special"`).
     pub kind: Option<String>,
+
+    /// Номер страницы (начиная с 1).
+    ///
+    /// Должно быть >= 1. Если не указано, используется значение по умолчанию API.
+    pub page: Option<i32>,
 }
 
 /// Параметры поиска манги.
@@ -492,6 +498,7 @@ pub struct AnimeSearchParams {
 ///     kind: None,
 /// };
 /// ```
+#[derive(Clone)]
 pub struct MangaSearchParams {
     /// Максимальное количество результатов.
     ///
@@ -507,6 +514,11 @@ pub struct MangaSearchParams {
     ///
     /// Поддерживаемые значения: `"manga"`, `"novel"`, `"one_shot"`, `"doujin"`, `"manhwa"`, `"manhua"`.
     pub kind: Option<String>,
+
+    /// Номер страницы (начиная с 1).
+    ///
+    /// Должно быть >= 1. Если не указано, используется значение по умолчанию API.
+    pub page: Option<i32>,
 }
 
 /// Параметры поиска людей (сейю, мангаки, продюсеры и т.д.).
@@ -561,6 +573,7 @@ pub struct PeopleSearchParams {
 ///     ids: Some(vec!["1".to_string(), "2".to_string(), "3".to_string()]),
 /// };
 /// ```
+#[derive(Clone)]
 pub struct CharacterSearchParams {
     /// Номер страницы (начиная с 1).
     ///
@@ -597,6 +610,7 @@ pub struct CharacterSearchParams {
 ///     order: Some("desc".to_string()),
 /// };
 /// ```
+#[derive(Clone)]
 pub struct UserRateSearchParams {
     /// Номер страницы (начиная с 1).
     ///
@@ -742,11 +756,12 @@ impl ShikicrateClient {
     /// ```
     pub async fn animes(&self, params: AnimeSearchParams) -> Result<Vec<Anime>> {
         Self::val_lim(params.limit)?;
+        Self::val_pg(params.page)?;
 
         self.fetch(
             ANIMES_QUERY.to_string(),
             || {
-                let mut vars = Self::build_vars(params.search.clone(), None, params.limit);
+                let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
                 if let Some(kind) = &params.kind {
                     vars["kind"] = json!(kind);
                 }
@@ -801,15 +816,16 @@ impl ShikicrateClient {
     /// ```
     pub async fn mangas(&self, params: MangaSearchParams) -> Result<Vec<Manga>> {
         Self::val_lim(params.limit)?;
+        Self::val_pg(params.page)?;
 
         let (query, variables) = if let Some(kind) = params.kind {
-            let mut vars = Self::build_vars(params.search.clone(), None, params.limit);
+            let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
             vars["kind"] = json!(kind);
             (MANGAS_WITH_KIND_QUERY.to_string(), vars)
         } else {
             (
                 MANGAS_QUERY.to_string(),
-                Self::build_vars(params.search.clone(), None, params.limit),
+                Self::build_vars(params.search.clone(), params.page, params.limit),
             )
         };
 

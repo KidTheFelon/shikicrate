@@ -15,6 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             search: Some("bakemono".to_string()),
             limit: Some(3),
             kind: Some("!special".to_string()),
+            page: None,
         })
         .await?;
 
@@ -43,6 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             limit: Some(5),
             search: None,
             kind: None,
+            page: None,
         })
         .await?;
 
