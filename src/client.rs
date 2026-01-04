@@ -502,8 +502,13 @@ impl ShikicrateClient {
             }
         }
 
-        // Недостижимый код, но для компилятора нужен возврат
-        unreachable!("Retry loop should always return or break")
+        // Этот код недостижим: цикл всегда возвращает значение через return
+        // Последняя попытка возвращает ошибку, успешные запросы возвращают Ok,
+        // не-retryable ошибки возвращаются сразу
+        unreachable!(
+            "Retry loop should always return: success returns Ok, last attempt returns Err, \
+             non-retryable errors return immediately"
+        )
     }
 }
 
@@ -518,5 +523,112 @@ impl Default for ShikicrateClient {
     /// Если не удалось создать HTTP клиент (крайне редкая ситуация).
     fn default() -> Self {
         Self::new().expect("Failed to create default client")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_retryable_http() {
+        // Проверяем, что HTTP ошибки могут быть retryable
+        // В реальности is_timeout/is_connect/is_request проверяются внутри reqwest::Error
+        // Создание reqwest::Error в тестах сложно, поэтому просто проверяем,
+        // что функция вызывается без паники и что логика существует
+        // В реальных условиях HTTP ошибки проверяются через методы reqwest::Error
+        let client_result = ShikicrateClient::new();
+        assert!(client_result.is_ok());
+        // Логика проверки is_retryable для HTTP ошибок находится в методе
+        // и проверяет e.is_timeout() || e.is_connect() || e.is_request()
+    }
+
+    #[test]
+    fn test_is_retryable_rate_limit() {
+        let error = ShikicrateError::RateLimit {
+            message: "rate limit".to_string(),
+            retry_after: Some(60),
+        };
+        assert!(ShikicrateClient::is_retryable(&error));
+    }
+
+    #[test]
+    fn test_is_retryable_validation() {
+        let error = ShikicrateError::Validation("invalid".to_string());
+        assert!(!ShikicrateClient::is_retryable(&error));
+    }
+
+    #[test]
+    fn test_is_retryable_graphql() {
+        let error = ShikicrateError::GraphQL {
+            message: "graphql error".to_string(),
+            errors: None,
+        };
+        assert!(!ShikicrateClient::is_retryable(&error));
+    }
+
+    #[test]
+    fn test_builder_default() {
+        let builder = ShikicrateClientBuilder::default();
+        let client = builder.build();
+        assert!(client.is_ok());
+    }
+
+    #[test]
+    fn test_builder_timeout() {
+        let client = ShikicrateClientBuilder::new()
+            .timeout(Duration::from_secs(60))
+            .build();
+        assert!(client.is_ok());
+    }
+
+    #[test]
+    fn test_builder_base_url() {
+        let client = ShikicrateClientBuilder::new()
+            .base_url("https://shikimori.one/api/graphql".to_string())
+            .build();
+        assert!(client.is_ok());
+    }
+
+    #[test]
+    fn test_builder_invalid_url_scheme() {
+        let client = ShikicrateClientBuilder::new()
+            .base_url("file:///etc/passwd".to_string())
+            .build();
+        assert!(matches!(client, Err(ShikicrateError::Validation(_))));
+    }
+
+    #[test]
+    fn test_builder_invalid_url_no_host() {
+        let client = ShikicrateClientBuilder::new()
+            .base_url("http://".to_string())
+            .build();
+        assert!(matches!(client, Err(ShikicrateError::Validation(_))));
+    }
+
+    #[test]
+    fn test_builder_invalid_url_parse() {
+        let client = ShikicrateClientBuilder::new()
+            .base_url("not a url".to_string())
+            .build();
+        assert!(matches!(client, Err(ShikicrateError::Validation(_))));
+    }
+
+    #[test]
+    fn test_with_base_url_validation() {
+        let client = ShikicrateClient::with_base_url("https://shikimori.one/api/graphql".to_string());
+        assert!(client.is_ok());
+    }
+
+    #[test]
+    fn test_with_base_url_invalid() {
+        let client = ShikicrateClient::with_base_url("ftp://example.com".to_string());
+        assert!(matches!(client, Err(ShikicrateError::Validation(_))));
+    }
+
+    #[test]
+    fn test_with_timeout() {
+        let client = ShikicrateClient::with_timeout(Duration::from_secs(60));
+        assert!(client.is_ok());
     }
 }

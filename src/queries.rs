@@ -132,6 +132,113 @@ const ANIMES_QUERY: &str = r#"
 "#;
 
 const MANGAS_QUERY: &str = r#"
+  query SearchMangas($search: String, $limit: Int) {
+    mangas(search: $search, limit: $limit) {
+      id
+      malId
+      name
+      russian
+      licenseNameRu
+      english
+      japanese
+      synonyms
+      kind
+      score
+      status
+      volumes
+      chapters
+      airedOn {
+        year
+        month
+        day
+        date
+      }
+      releasedOn {
+        year
+        month
+        day
+        date
+      }
+      url
+      poster {
+        id
+        originalUrl
+        mainUrl
+      }
+      licensors
+      createdAt
+      updatedAt
+      isCensored
+      genres {
+        id
+        name
+        russian
+        kind
+      }
+      publishers {
+        id
+        name
+      }
+      externalLinks {
+        id
+        kind
+        url
+        createdAt
+        updatedAt
+      }
+      personRoles {
+        id
+        rolesRu
+        rolesEn
+        person {
+          id
+          name
+          poster {
+            id
+          }
+        }
+      }
+      characterRoles {
+        id
+        rolesRu
+        rolesEn
+        character {
+          id
+          name
+          poster {
+            id
+          }
+        }
+      }
+      related {
+        id
+        anime {
+          id
+          name
+        }
+        manga {
+          id
+          name
+        }
+        relationKind
+        relationText
+      }
+      scoresStats {
+        score
+        count
+      }
+      statusesStats {
+        status
+        count
+      }
+      description
+      descriptionHtml
+      descriptionSource
+    }
+  }
+"#;
+
+const MANGAS_WITH_KIND_QUERY: &str = r#"
   query SearchMangas($search: String, $limit: Int, $kind: MangaKindString) {
     mangas(search: $search, limit: $limit, kind: $kind) {
       id
@@ -695,16 +802,16 @@ impl ShikicrateClient {
     pub async fn mangas(&self, params: MangaSearchParams) -> Result<Vec<Manga>> {
         Self::val_lim(params.limit)?;
 
-        let mut query = MANGAS_QUERY.to_string();
-        let mut variables = Self::build_vars(params.search.clone(), None, params.limit);
-
-        // Если kind не указан, нужно убрать его из запроса
-        if params.kind.is_none() {
-            query = query.replace("$kind: MangaKindString", "");
-            query = query.replace(", kind: $kind", "");
+        let (query, variables) = if let Some(kind) = params.kind {
+            let mut vars = Self::build_vars(params.search.clone(), None, params.limit);
+            vars["kind"] = json!(kind);
+            (MANGAS_WITH_KIND_QUERY.to_string(), vars)
         } else {
-            variables["kind"] = json!(params.kind);
-        }
+            (
+                MANGAS_QUERY.to_string(),
+                Self::build_vars(params.search.clone(), None, params.limit),
+            )
+        };
 
         self.fetch(query, || variables.clone(), "mangas").await
     }
@@ -895,5 +1002,80 @@ impl ShikicrateClient {
             "userRates",
         )
         .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::ShikicrateError;
+
+    #[test]
+    fn test_val_lim_valid() {
+        assert!(ShikicrateClient::val_lim(None).is_ok());
+        assert!(ShikicrateClient::val_lim(Some(1)).is_ok());
+        assert!(ShikicrateClient::val_lim(Some(100)).is_ok());
+    }
+
+    #[test]
+    fn test_val_lim_invalid() {
+        assert!(matches!(
+            ShikicrateClient::val_lim(Some(0)),
+            Err(ShikicrateError::Validation(_))
+        ));
+        assert!(matches!(
+            ShikicrateClient::val_lim(Some(-1)),
+            Err(ShikicrateError::Validation(_))
+        ));
+    }
+
+    #[test]
+    fn test_val_pg_valid() {
+        assert!(ShikicrateClient::val_pg(None).is_ok());
+        assert!(ShikicrateClient::val_pg(Some(1)).is_ok());
+        assert!(ShikicrateClient::val_pg(Some(100)).is_ok());
+    }
+
+    #[test]
+    fn test_val_pg_invalid() {
+        assert!(matches!(
+            ShikicrateClient::val_pg(Some(0)),
+            Err(ShikicrateError::Validation(_))
+        ));
+        assert!(matches!(
+            ShikicrateClient::val_pg(Some(-1)),
+            Err(ShikicrateError::Validation(_))
+        ));
+    }
+
+    #[test]
+    fn test_val_ids_valid() {
+        assert!(ShikicrateClient::val_ids(None).is_ok());
+        let ids = vec!["1".to_string(), "2".to_string()];
+        assert!(ShikicrateClient::val_ids(Some(&ids)).is_ok());
+    }
+
+    #[test]
+    fn test_val_ids_invalid() {
+        let empty_ids = vec![];
+        assert!(matches!(
+            ShikicrateClient::val_ids(Some(&empty_ids)),
+            Err(ShikicrateError::Validation(_))
+        ));
+    }
+
+    #[test]
+    fn test_build_vars() {
+        let vars = ShikicrateClient::build_vars(None, None, None);
+        assert!(vars.as_object().unwrap().is_empty());
+
+        let vars = ShikicrateClient::build_vars(
+            Some("test".to_string()),
+            Some(2),
+            Some(10),
+        );
+        assert_eq!(vars["search"], "test");
+        assert_eq!(vars["page"], 2);
+        assert_eq!(vars["limit"], 10);
     }
 }
