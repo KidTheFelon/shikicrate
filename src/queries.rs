@@ -1088,11 +1088,7 @@ mod tests {
         let vars = ShikicrateClient::build_vars(None, None, None);
         assert!(vars.as_object().unwrap().is_empty());
 
-        let vars = ShikicrateClient::build_vars(
-            Some("test".to_string()),
-            Some(2),
-            Some(10),
-        );
+        let vars = ShikicrateClient::build_vars(Some("test".to_string()), Some(2), Some(10));
         assert_eq!(vars["search"], "test");
         assert_eq!(vars["page"], 2);
         assert_eq!(vars["limit"], 10);

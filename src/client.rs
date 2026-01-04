@@ -635,7 +635,8 @@ mod tests {
 
     #[test]
     fn test_with_base_url_validation() {
-        let client = ShikicrateClient::with_base_url("https://shikimori.one/api/graphql".to_string());
+        let client =
+            ShikicrateClient::with_base_url("https://shikimori.one/api/graphql".to_string());
         assert!(client.is_ok());
     }
 

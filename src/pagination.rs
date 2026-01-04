@@ -42,7 +42,6 @@ struct UserRatesPaginatorState {
     current_page: i32,
 }
 
-
 /// Ленивый итератор для пагинации результатов поиска аниме.
 ///
 /// Автоматически загружает следующую страницу при достижении конца текущей.
@@ -172,7 +171,7 @@ impl ShikicrateClient {
                     }
                 })
             })
-            .boxed()
+            .boxed(),
         )
     }
 
@@ -214,7 +213,7 @@ impl ShikicrateClient {
                     }
                 })
             })
-            .boxed()
+            .boxed(),
         )
     }
 
@@ -263,7 +262,7 @@ impl ShikicrateClient {
                     }
                 })
             })
-            .boxed()
+            .boxed(),
         )
     }
 
@@ -314,7 +313,7 @@ impl ShikicrateClient {
                     }
                 })
             })
-            .boxed()
+            .boxed(),
         )
     }
 }
