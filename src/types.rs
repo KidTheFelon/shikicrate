@@ -296,6 +296,7 @@ pub struct StatusStat {
 ///     search: Some("naruto".to_string()),
 ///     limit: Some(1),
 ///     kind: None,
+///     page: None,
 /// }).await?;
 ///
 /// if let Some(anime) = animes.first() {

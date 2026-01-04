@@ -19,6 +19,7 @@ use thiserror::Error;
 ///         search: None,
 ///         limit: Some(-1), // Невалидное значение
 ///         kind: None,
+///         page: None,
 ///     };
 ///     
 ///     match client.animes(params).await {

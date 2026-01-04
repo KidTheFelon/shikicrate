@@ -449,6 +449,7 @@ const USER_RATES_QUERY: &str = r#"
 ///     search: Some("naruto".to_string()),
 ///     limit: Some(10),
 ///     kind: None,
+///     page: None,
 /// };
 ///
 /// // Поиск с фильтром по типу (исключить спешлы)
@@ -456,6 +457,7 @@ const USER_RATES_QUERY: &str = r#"
 ///     search: Some("bakemono".to_string()),
 ///     limit: Some(5),
 ///     kind: Some("!special".to_string()),
+///     page: None,
 /// };
 /// ```
 #[derive(Clone)]
@@ -496,6 +498,7 @@ pub struct AnimeSearchParams {
 ///     search: Some("one piece".to_string()),
 ///     limit: Some(5),
 ///     kind: None,
+///     page: None,
 /// };
 /// ```
 #[derive(Clone)]
@@ -746,6 +749,7 @@ impl ShikicrateClient {
     ///     search: Some("naruto".to_string()),
     ///     limit: Some(10),
     ///     kind: None,
+    ///     page: None,
     /// }).await?;
     ///
     /// for anime in animes {
@@ -806,6 +810,7 @@ impl ShikicrateClient {
     ///     search: Some("one piece".to_string()),
     ///     limit: Some(5),
     ///     kind: None,
+    ///     page: None,
     /// }).await?;
     ///
     /// for manga in mangas {

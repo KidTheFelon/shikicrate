@@ -27,6 +27,7 @@
 //!         search: Some("naruto".to_string()),
 //!         limit: Some(10),
 //!         kind: None,
+//!         page: None,
 //!     }).await?;
 //!
 //!     for anime in animes {
