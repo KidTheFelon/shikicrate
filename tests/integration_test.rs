@@ -8,6 +8,7 @@ async fn test_search_animes() -> Result<()> {
         search: Some("bakemono".to_string()),
         limit: Some(1),
         kind: Some("!special".to_string()),
+        ids: None,
         page: None,
     };
 
@@ -34,6 +35,7 @@ async fn test_search_mangas() -> Result<()> {
         limit: Some(5),
         search: None,
         kind: None,
+        ids: None,
         page: None,
     };
 

@@ -13,6 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let animes = client
         .animes(AnimeSearchParams {
             search: Some("bakemono".to_string()),
+            ids: None,
             limit: Some(3),
             kind: Some("!special".to_string()),
             page: None,
@@ -43,6 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .mangas(MangaSearchParams {
             limit: Some(5),
             search: None,
+            ids: None,
             kind: None,
             page: None,
         })
