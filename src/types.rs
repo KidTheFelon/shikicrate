@@ -122,6 +122,18 @@ pub struct Poster {
     /// URL основного изображения (оптимизированный размер).
     #[serde(rename = "mainUrl")]
     pub main_url: Option<String>,
+
+    /// URL превью-изображения.
+    #[serde(rename = "previewUrl")]
+    pub preview_url: Option<String>,
+
+    /// URL изображения 96x96.
+    #[serde(rename = "x96Url")]
+    pub x96_url: Option<String>,
+
+    /// URL изображения 48x48.
+    #[serde(rename = "x48Url")]
+    pub x48_url: Option<String>,
 }
 
 /// Жанр аниме или манги.
@@ -184,6 +196,7 @@ pub struct Person {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
     pub name: String,
+    pub russian: Option<String>,
     pub poster: Option<Poster>,
 }
 
@@ -203,6 +216,7 @@ pub struct Character {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
     pub name: String,
+    pub russian: Option<String>,
     pub poster: Option<Poster>,
 }
 
@@ -214,7 +228,9 @@ pub struct CharacterRole {
     pub roles_ru: Option<Vec<String>>,
     #[serde(rename = "rolesEn")]
     pub roles_en: Option<Vec<String>>,
-    pub character: Character,
+    pub character: Option<Character>,
+    pub anime: Option<Anime>,
+    pub manga: Option<Manga>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -222,6 +238,8 @@ pub struct RelatedAnime {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
     pub name: Option<String>,
+    pub russian: Option<String>,
+    pub poster: Option<Poster>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -229,6 +247,8 @@ pub struct RelatedManga {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
     pub name: Option<String>,
+    pub russian: Option<String>,
+    pub poster: Option<Poster>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

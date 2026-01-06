@@ -7,6 +7,24 @@ const ANIMES_QUERY: &str = r#"
   query SearchAnimes($search: String, $ids: String, $limit: Int, $page: Int, $kind: AnimeKindString) {
     animes(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind) {
       id
+      name
+      russian
+      kind
+      score
+      status
+      episodes
+      poster {
+        id
+        mainUrl
+      }
+    }
+  }
+"#;
+
+const ANIME_DETAILS_QUERY: &str = r#"
+  query GetAnimeDetails($ids: String) {
+    animes(ids: $ids, limit: 1) {
+      id
       malId
       name
       russian
@@ -62,30 +80,30 @@ const ANIMES_QUERY: &str = r#"
         id
         kind
         url
-        createdAt
-        updatedAt
       }
       personRoles {
         id
         rolesRu
-        rolesEn
         person {
           id
           name
+          russian
           poster {
             id
+            mainUrl
           }
         }
       }
       characterRoles {
         id
         rolesRu
-        rolesEn
         character {
           id
           name
+          russian
           poster {
             id
+            mainUrl
           }
         }
       }
@@ -94,13 +112,24 @@ const ANIMES_QUERY: &str = r#"
         anime {
           id
           name
+          russian
+          poster {
+            id
+            mainUrl
+            previewUrl
+          }
         }
         manga {
           id
           name
+          russian
+          poster {
+            id
+            mainUrl
+            previewUrl
+          }
         }
         relationKind
-        relationText
       }
       videos {
         id
@@ -112,8 +141,6 @@ const ANIMES_QUERY: &str = r#"
       }
       screenshots {
         id
-        originalUrl
-        x166Url
         x332Url
       }
       scoresStats {
@@ -126,7 +153,6 @@ const ANIMES_QUERY: &str = r#"
       }
       description
       descriptionHtml
-      descriptionSource
     }
   }
 "#;
@@ -134,6 +160,25 @@ const ANIMES_QUERY: &str = r#"
 const MANGAS_QUERY: &str = r#"
   query SearchMangas($search: String, $ids: String, $limit: Int, $page: Int) {
     mangas(search: $search, ids: $ids, limit: $limit, page: $page) {
+      id
+      name
+      russian
+      kind
+      score
+      status
+      volumes
+      chapters
+      poster {
+        id
+        mainUrl
+      }
+    }
+  }
+"#;
+
+const MANGA_DETAILS_QUERY: &str = r#"
+  query GetMangaDetails($ids: String) {
+    mangas(ids: $ids, limit: 1) {
       id
       malId
       name
@@ -183,30 +228,30 @@ const MANGAS_QUERY: &str = r#"
         id
         kind
         url
-        createdAt
-        updatedAt
       }
       personRoles {
         id
         rolesRu
-        rolesEn
         person {
           id
           name
+          russian
           poster {
             id
+            mainUrl
           }
         }
       }
       characterRoles {
         id
         rolesRu
-        rolesEn
         character {
           id
           name
+          russian
           poster {
             id
+            mainUrl
           }
         }
       }
@@ -215,13 +260,24 @@ const MANGAS_QUERY: &str = r#"
         anime {
           id
           name
+          russian
+          poster {
+            id
+            mainUrl
+            previewUrl
+          }
         }
         manga {
           id
           name
+          russian
+          poster {
+            id
+            mainUrl
+            previewUrl
+          }
         }
         relationKind
-        relationText
       }
       scoresStats {
         score
@@ -233,7 +289,6 @@ const MANGAS_QUERY: &str = r#"
       }
       description
       descriptionHtml
-      descriptionSource
     }
   }
 "#;
@@ -286,61 +341,6 @@ const MANGAS_WITH_KIND_QUERY: &str = r#"
         id
         name
       }
-      externalLinks {
-        id
-        kind
-        url
-        createdAt
-        updatedAt
-      }
-      personRoles {
-        id
-        rolesRu
-        rolesEn
-        person {
-          id
-          name
-          poster {
-            id
-          }
-        }
-      }
-      characterRoles {
-        id
-        rolesRu
-        rolesEn
-        character {
-          id
-          name
-          poster {
-            id
-          }
-        }
-      }
-      related {
-        id
-        anime {
-          id
-          name
-        }
-        manga {
-          id
-          name
-        }
-        relationKind
-        relationText
-      }
-      scoresStats {
-        score
-        count
-      }
-      statusesStats {
-        status
-        count
-      }
-      description
-      descriptionHtml
-      descriptionSource
     }
   }
 "#;
@@ -414,6 +414,39 @@ const CHARACTERS_BY_IDS_QUERY: &str = r#"
     characters(ids: $ids) {
       id
       name
+      russian
+      poster {
+        id
+        originalUrl
+        mainUrl
+      }
+    }
+  }
+"#;
+
+const CHARACTER_DETAILS_QUERY: &str = r#"
+  query GetCharacterDetails($ids: [ID!]) {
+    characters(ids: $ids) {
+      id
+      malId
+      name
+      russian
+      japanese
+      synonyms
+      url
+      createdAt
+      updatedAt
+      isAnime
+      isManga
+      isRanobe
+      poster {
+        id
+        originalUrl
+        mainUrl
+      }
+      description
+      descriptionHtml
+      descriptionSource
     }
   }
 "#;
@@ -554,6 +587,16 @@ impl ShikicrateClient {
         .await
     }
 
+    pub async fn anime_detail(&self, id: i64) -> Result<Option<Anime>> {
+        let mut animes = self.fetch(
+            ANIME_DETAILS_QUERY.to_string(),
+            || json!({ "ids": id.to_string() }),
+            "animes",
+        )
+        .await?;
+        Ok(animes.pop())
+    }
+
     pub async fn mangas(&self, params: MangaSearchParams) -> Result<Vec<Manga>> {
         Self::val_lim(params.limit)?;
         Self::val_pg(params.page)?;
@@ -574,6 +617,16 @@ impl ShikicrateClient {
         }
 
         self.fetch(query, || variables.clone(), "mangas").await
+    }
+
+    pub async fn manga_detail(&self, id: i64) -> Result<Option<Manga>> {
+        let mut mangas = self.fetch(
+            MANGA_DETAILS_QUERY.to_string(),
+            || json!({ "ids": id.to_string() }),
+            "mangas",
+        )
+        .await?;
+        Ok(mangas.pop())
     }
 
     pub async fn people(&self, params: PeopleSearchParams) -> Result<Vec<PersonFull>> {
@@ -613,6 +666,16 @@ impl ShikicrateClient {
             "characters",
         )
         .await
+    }
+
+    pub async fn character_detail(&self, id: i64) -> Result<Option<CharacterFull>> {
+        let mut characters = self.fetch(
+            CHARACTER_DETAILS_QUERY.to_string(),
+            || json!({ "ids": [id.to_string()] }),
+            "characters",
+        )
+        .await?;
+        Ok(characters.pop())
     }
 
     pub async fn user_rates(&self, params: UserRateSearchParams) -> Result<Vec<UserRate>> {
