@@ -164,7 +164,7 @@ pub struct Studio {
     pub name: String,
 
     /// URL логотипа студии.
-    #[serde(rename = "imageUrl")]
+    #[serde(rename = "imageUrl", alias = "image")]
     pub image_url: Option<String>,
 }
 

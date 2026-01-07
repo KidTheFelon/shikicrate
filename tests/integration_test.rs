@@ -8,8 +8,7 @@ async fn test_search_animes() -> Result<()> {
         search: Some("bakemono".to_string()),
         limit: Some(1),
         kind: Some("!special".to_string()),
-        ids: None,
-        page: None,
+        ..Default::default()
     };
 
     let animes = client.animes(params).await?;
@@ -33,10 +32,7 @@ async fn test_search_mangas() -> Result<()> {
 
     let params = MangaSearchParams {
         limit: Some(5),
-        search: None,
-        kind: None,
-        ids: None,
-        page: None,
+        ..Default::default()
     };
 
     let mangas = client.mangas(params).await?;
@@ -52,7 +48,7 @@ async fn test_search_people() -> Result<()> {
 
     let params = PeopleSearchParams {
         limit: Some(1),
-        search: None,
+        ..Default::default()
     };
 
     let people = client.people(params).await?;
@@ -69,7 +65,7 @@ async fn test_search_characters() -> Result<()> {
     let params = CharacterSearchParams {
         page: Some(1),
         limit: Some(1),
-        ids: None,
+        ..Default::default()
     };
 
     let characters = client.characters(params).await?;
@@ -84,9 +80,8 @@ async fn test_search_characters_by_ids() -> Result<()> {
     let client = ShikicrateClient::new()?;
 
     let params = CharacterSearchParams {
-        page: None,
-        limit: None,
         ids: Some(vec!["1".to_string(), "2".to_string()]),
+        ..Default::default()
     };
 
     let characters = client.characters(params).await?;

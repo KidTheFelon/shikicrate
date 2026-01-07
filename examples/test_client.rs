@@ -13,10 +13,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let animes = client
         .animes(AnimeSearchParams {
             search: Some("bakemono".to_string()),
-            ids: None,
             limit: Some(3),
             kind: Some("!special".to_string()),
-            page: None,
+            ..Default::default()
         })
         .await?;
 
@@ -43,10 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mangas = client
         .mangas(MangaSearchParams {
             limit: Some(5),
-            search: None,
-            ids: None,
-            kind: None,
-            page: None,
+            ..Default::default()
         })
         .await?;
 
@@ -71,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .characters(CharacterSearchParams {
             page: Some(1),
             limit: Some(5),
-            ids: None,
+            ..Default::default()
         })
         .await?;
 
@@ -91,9 +87,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let characters_by_ids = client
         .characters(CharacterSearchParams {
-            page: None,
-            limit: None,
             ids: Some(vec!["1".to_string(), "2".to_string(), "3".to_string()]),
+            ..Default::default()
         })
         .await?;
 
@@ -111,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let people = client
         .people(PeopleSearchParams {
             limit: Some(3),
-            search: None,
+            ..Default::default()
         })
         .await?;
 

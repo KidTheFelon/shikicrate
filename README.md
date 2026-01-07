@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let params = AnimeSearchParams {
         search: Some("naruto".to_string()),
         limit: Some(10),
-        kind: None,
+        ..Default::default()
     };
     
     let animes = client.animes(params).await?;
@@ -61,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 let params = AnimeSearchParams {
     limit: Some(10),
     search: Some("naruto".to_string()),
-    kind: None,
+    ..Default::default()
 };
 
 let animes = client.animes(params).await?;
@@ -73,7 +73,7 @@ let animes = client.animes(params).await?;
 let params = MangaSearchParams {
     limit: Some(5),
     search: Some("one piece".to_string()),
-    kind: None,
+    ..Default::default()
 };
 
 let mangas = client.mangas(params).await?;
@@ -88,16 +88,15 @@ let mangas = client.mangas(params).await?;
 let params = CharacterSearchParams {
     page: Some(1),
     limit: Some(20),
-    ids: None,
+    ..Default::default()
 };
 
 let characters = client.characters(params).await?;
 
 // Или по ID (если знаешь, кого ищешь)
 let params = CharacterSearchParams {
-    page: None,
-    limit: None,
     ids: Some(vec!["1".to_string(), "2".to_string()]),
+    ..Default::default()
 };
 
 let characters = client.characters(params).await?;
@@ -109,6 +108,7 @@ let characters = client.characters(params).await?;
 let params = PeopleSearchParams {
     limit: Some(10),
     search: Some("miyazaki".to_string()),
+    ..Default::default()
 };
 
 let people = client.people(params).await?;
@@ -123,6 +123,7 @@ let params = UserRateSearchParams {
     target_type: Some("Anime".to_string()),
     order_field: Some("updated_at".to_string()),
     order: Some("desc".to_string()),
+    ..Default::default()
 };
 
 let user_rates = client.user_rates(params).await?;

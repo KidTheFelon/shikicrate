@@ -4,8 +4,8 @@ use crate::types::*;
 use serde_json::json;
 
 const ANIMES_QUERY: &str = r#"
-  query SearchAnimes($search: String, $ids: String, $limit: Int, $page: Int, $kind: AnimeKindString) {
-    animes(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind) {
+  query SearchAnimes($search: String, $ids: String, $limit: Int, $page: Int, $kind: AnimeKindString, $status: AnimeStatusString, $genre: String, $studio: String, $order: OrderEnum, $censored: Boolean) {
+    animes(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind, status: $status, genre: $genre, studio: $studio, order: $order, censored: $censored) {
       id
       name
       russian
@@ -17,6 +17,16 @@ const ANIMES_QUERY: &str = r#"
         id
         mainUrl
       }
+    }
+  }
+"#;
+
+const ANIMES_LITE_QUERY: &str = r#"
+  query SearchAnimesLite($search: String, $ids: String, $limit: Int, $page: Int, $kind: AnimeKindString, $status: AnimeStatusString, $genre: String, $studio: String) {
+    animes(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind, status: $status, genre: $genre, studio: $studio) {
+      id
+      name
+      russian
     }
   }
 "#;
@@ -58,13 +68,6 @@ const ANIME_DETAILS_QUERY: &str = r#"
         originalUrl
         mainUrl
       }
-      fansubbers
-      fandubbers
-      licensors
-      createdAt
-      updatedAt
-      nextEpisodeAt
-      isCensored
       genres {
         id
         name
@@ -81,10 +84,11 @@ const ANIME_DETAILS_QUERY: &str = r#"
         kind
         url
       }
-      personRoles {
+      characterRoles {
         id
         rolesRu
-        person {
+        rolesEn
+        character {
           id
           name
           russian
@@ -94,10 +98,11 @@ const ANIME_DETAILS_QUERY: &str = r#"
           }
         }
       }
-      characterRoles {
+      personRoles {
         id
         rolesRu
-        character {
+        rolesEn
+        person {
           id
           name
           russian
@@ -109,6 +114,8 @@ const ANIME_DETAILS_QUERY: &str = r#"
       }
       related {
         id
+        relationKind
+        relationText
         anime {
           id
           name
@@ -129,7 +136,6 @@ const ANIME_DETAILS_QUERY: &str = r#"
             previewUrl
           }
         }
-        relationKind
       }
       videos {
         id
@@ -141,6 +147,8 @@ const ANIME_DETAILS_QUERY: &str = r#"
       }
       screenshots {
         id
+        originalUrl
+        x166Url
         x332Url
       }
       scoresStats {
@@ -158,8 +166,8 @@ const ANIME_DETAILS_QUERY: &str = r#"
 "#;
 
 const MANGAS_QUERY: &str = r#"
-  query SearchMangas($search: String, $ids: String, $limit: Int, $page: Int) {
-    mangas(search: $search, ids: $ids, limit: $limit, page: $page) {
+  query SearchMangas($search: String, $ids: String, $limit: Int, $page: Int, $kind: MangaKindString, $status: MangaStatusString, $genre: String, $publisher: String, $order: OrderEnum, $censored: Boolean) {
+    mangas(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind, status: $status, genre: $genre, publisher: $publisher, order: $order, censored: $censored) {
       id
       name
       russian
@@ -210,10 +218,6 @@ const MANGA_DETAILS_QUERY: &str = r#"
         originalUrl
         mainUrl
       }
-      licensors
-      createdAt
-      updatedAt
-      isCensored
       genres {
         id
         name
@@ -229,10 +233,11 @@ const MANGA_DETAILS_QUERY: &str = r#"
         kind
         url
       }
-      personRoles {
+      characterRoles {
         id
         rolesRu
-        person {
+        rolesEn
+        character {
           id
           name
           russian
@@ -242,10 +247,11 @@ const MANGA_DETAILS_QUERY: &str = r#"
           }
         }
       }
-      characterRoles {
+      personRoles {
         id
         rolesRu
-        character {
+        rolesEn
+        person {
           id
           name
           russian
@@ -257,6 +263,8 @@ const MANGA_DETAILS_QUERY: &str = r#"
       }
       related {
         id
+        relationKind
+        relationText
         anime {
           id
           name
@@ -277,7 +285,6 @@ const MANGA_DETAILS_QUERY: &str = r#"
             previewUrl
           }
         }
-        relationKind
       }
       scoresStats {
         score
@@ -294,8 +301,8 @@ const MANGA_DETAILS_QUERY: &str = r#"
 "#;
 
 const MANGAS_WITH_KIND_QUERY: &str = r#"
-  query SearchMangas($search: String, $ids: String, $limit: Int, $page: Int, $kind: MangaKindString) {
-    mangas(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind) {
+  query SearchMangas($search: String, $ids: String, $limit: Int, $page: Int, $kind: MangaKindString, $status: MangaStatusString, $genre: String, $publisher: String, $order: OrderEnum, $censored: Boolean) {
+    mangas(search: $search, ids: $ids, limit: $limit, page: $page, kind: $kind, status: $status, genre: $genre, publisher: $publisher, order: $order, censored: $censored) {
       id
       malId
       name
@@ -327,19 +334,11 @@ const MANGAS_WITH_KIND_QUERY: &str = r#"
         originalUrl
         mainUrl
       }
-      licensors
-      createdAt
-      updatedAt
-      isCensored
       genres {
         id
         name
         russian
         kind
-      }
-      publishers {
-        id
-        name
       }
     }
   }
@@ -383,8 +382,8 @@ const PEOPLE_QUERY: &str = r#"
 "#;
 
 const CHARACTERS_QUERY: &str = r#"
-  query SearchCharacters($page: Int, $limit: Int) {
-    characters(page: $page, limit: $limit) {
+  query SearchCharacters($search: String, $page: Int, $limit: Int) {
+    characters(search: $search, page: $page, limit: $limit) {
       id
       malId
       name
@@ -468,37 +467,51 @@ const USER_RATES_QUERY: &str = r#"
   }
 "#;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct AnimeSearchParams {
     pub search: Option<String>,
     pub ids: Option<String>,
     pub limit: Option<i32>,
     pub kind: Option<String>,
+    pub status: Option<String>,
+    pub season: Option<String>,
+    pub rating: Option<String>,
+    pub genre: Option<String>,
+    pub studio: Option<String>,
     pub page: Option<i32>,
+    pub order: Option<String>,
+    pub censored: Option<bool>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct MangaSearchParams {
     pub limit: Option<i32>,
     pub search: Option<String>,
     pub ids: Option<String>,
     pub kind: Option<String>,
+    pub status: Option<String>,
+    pub genre: Option<String>,
+    pub publisher: Option<String>,
     pub page: Option<i32>,
+    pub order: Option<String>,
+    pub censored: Option<bool>,
 }
 
+#[derive(Clone, Default)]
 pub struct PeopleSearchParams {
     pub limit: Option<i32>,
     pub search: Option<String>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct CharacterSearchParams {
+    pub search: Option<String>,
     pub page: Option<i32>,
     pub limit: Option<i32>,
     pub ids: Option<Vec<String>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct UserRateSearchParams {
     pub page: Option<i32>,
     pub limit: Option<i32>,
@@ -574,12 +587,33 @@ impl ShikicrateClient {
             ANIMES_QUERY.to_string(),
             || {
                 let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
-                if let Some(kind) = &params.kind {
-                    vars["kind"] = json!(kind);
-                }
-                if let Some(ids) = &params.ids {
-                    vars["ids"] = json!(ids);
-                }
+                if let Some(kind) = &params.kind { vars["kind"] = json!(kind); }
+                if let Some(status) = &params.status { vars["status"] = json!(status); }
+                if let Some(genre) = &params.genre { vars["genre"] = json!(genre); }
+                if let Some(studio) = &params.studio { vars["studio"] = json!(studio); }
+                if let Some(ids) = &params.ids { vars["ids"] = json!(ids); }
+                if let Some(order) = &params.order { vars["order"] = json!(order); }
+                if let Some(censored) = params.censored { vars["censored"] = json!(censored); }
+                vars
+            },
+            "animes",
+        )
+        .await
+    }
+
+    pub async fn animes_lite(&self, params: AnimeSearchParams) -> Result<Vec<Anime>> {
+        Self::val_lim(params.limit)?;
+        Self::val_pg(params.page)?;
+
+        self.fetch(
+            ANIMES_LITE_QUERY.to_string(),
+            || {
+                let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
+                if let Some(kind) = &params.kind { vars["kind"] = json!(kind); }
+                if let Some(status) = &params.status { vars["status"] = json!(status); }
+                if let Some(genre) = &params.genre { vars["genre"] = json!(genre); }
+                if let Some(studio) = &params.studio { vars["studio"] = json!(studio); }
+                if let Some(ids) = &params.ids { vars["ids"] = json!(ids); }
                 vars
             },
             "animes",
@@ -601,22 +635,22 @@ impl ShikicrateClient {
         Self::val_lim(params.limit)?;
         Self::val_pg(params.page)?;
 
-        let (query, mut variables) = if let Some(kind) = params.kind {
-            let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
-            vars["kind"] = json!(kind);
-            (MANGAS_WITH_KIND_QUERY.to_string(), vars)
+        let mut vars = Self::build_vars(params.search.clone(), params.page, params.limit);
+        if let Some(kind) = &params.kind { vars["kind"] = json!(kind); }
+        if let Some(status) = &params.status { vars["status"] = json!(status); }
+        if let Some(genre) = &params.genre { vars["genre"] = json!(genre); }
+        if let Some(publisher) = &params.publisher { vars["publisher"] = json!(publisher); }
+        if let Some(ids) = &params.ids { vars["ids"] = json!(ids); }
+        if let Some(order) = &params.order { vars["order"] = json!(order); }
+        if let Some(censored) = params.censored { vars["censored"] = json!(censored); }
+
+        let query = if params.kind.is_some() {
+            MANGAS_WITH_KIND_QUERY.to_string()
         } else {
-            (
-                MANGAS_QUERY.to_string(),
-                Self::build_vars(params.search.clone(), params.page, params.limit),
-            )
+            MANGAS_QUERY.to_string()
         };
 
-        if let Some(ids) = params.ids {
-            variables["ids"] = json!(ids);
-        }
-
-        self.fetch(query, || variables.clone(), "mangas").await
+        self.fetch(query, || vars.clone(), "mangas").await
     }
 
     pub async fn manga_detail(&self, id: i64) -> Result<Option<Manga>> {
@@ -660,7 +694,7 @@ impl ShikicrateClient {
                 if let Some(ids) = params.ids {
                     json!({ "ids": ids })
                 } else {
-                    Self::build_vars(None, params.page, params.limit)
+                    Self::build_vars(params.search.clone(), params.page, params.limit)
                 }
             },
             "characters",
@@ -676,6 +710,38 @@ impl ShikicrateClient {
         )
         .await?;
         Ok(characters.pop())
+    }
+
+    pub async fn studios(&self, search: Option<String>) -> Result<Vec<Studio>> {
+        let all_studios: Vec<Studio> = self.get_rest("studios", None::<serde_json::Value>).await?;
+        if let Some(s) = search {
+            let s_lower = s.to_lowercase();
+            Ok(all_studios
+                .into_iter()
+                .filter(|st| st.name.to_lowercase().contains(&s_lower))
+                .take(10)
+                .collect())
+        } else {
+            Ok(all_studios.into_iter().take(10).collect())
+        }
+    }
+
+    pub async fn publishers(&self, search: Option<String>) -> Result<Vec<Publisher>> {
+        let all_publishers: Vec<Publisher> = self.get_rest("publishers", None::<serde_json::Value>).await?;
+        if let Some(s) = search {
+            let s_lower = s.to_lowercase();
+            Ok(all_publishers
+                .into_iter()
+                .filter(|p| p.name.to_lowercase().contains(&s_lower))
+                .take(10)
+                .collect())
+        } else {
+            Ok(all_publishers.into_iter().take(10).collect())
+        }
+    }
+
+    pub async fn genres(&self) -> Result<Vec<Genre>> {
+        self.get_rest("genres", None::<serde_json::Value>).await
     }
 
     pub async fn user_rates(&self, params: UserRateSearchParams) -> Result<Vec<UserRate>> {

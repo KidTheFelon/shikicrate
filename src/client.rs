@@ -63,12 +63,14 @@ impl ShikicrateClient {
     }
 
     fn mk_client(timeout: Duration) -> Result<Client> {
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert("Origin", "https://shikimori.one".parse().unwrap());
-        headers.insert("Referer", "https://shikimori.one/".parse().unwrap());
-        headers.insert("X-Requested-With", "XMLHttpRequest".parse().unwrap());
-        headers.insert("Accept", "application/json".parse().unwrap());
-        headers.insert("Content-Type", "application/json".parse().unwrap());
+        use reqwest::header::{HeaderMap, HeaderValue};
+        let mut headers = HeaderMap::new();
+        
+        headers.insert("Origin", HeaderValue::from_static("https://shikimori.one"));
+        headers.insert("Referer", HeaderValue::from_static("https://shikimori.one/"));
+        headers.insert("X-Requested-With", HeaderValue::from_static("XMLHttpRequest"));
+        headers.insert("Accept", HeaderValue::from_static("application/json"));
+        headers.insert("Content-Type", HeaderValue::from_static("application/json"));
 
         Client::builder()
             .timeout(timeout)
@@ -178,16 +180,51 @@ impl ShikicrateClient {
         Err(last_error)
     }
 
+    pub async fn get_rest<T, Q>(&self, path: &str, query: Option<Q>) -> Result<T>
+    where
+        T: serde::de::DeserializeOwned,
+        Q: serde::Serialize,
+    {
+        let url = format!("https://shikimori.one/api/{}", path);
+        let mut req = self.client.get(&url);
+        
+        if let Some(q) = query {
+            req = req.query(&q);
+        }
+
+        let response = req.send().await?;
+        let status = response.status();
+        
+        if !status.is_success() {
+            let text = response.text().await?;
+            return Err(ShikicrateError::Api {
+                status: status.as_u16(),
+                message: format!("REST HTTP {}: {}", status, text),
+            });
+        }
+
+        response.json::<T>().await.map_err(ShikicrateError::from)
+    }
+
     pub(crate) fn to_arc(&self) -> Arc<Self> {
         Arc::new(Self {
-            client: Self::mk_client(DEFAULT_TIMEOUT).unwrap(),
+            client: self.client.clone(),
             base_url: self.base_url.clone(),
         })
     }
 }
 
+impl Clone for ShikicrateClient {
+    fn clone(&self) -> Self {
+        Self {
+            client: self.client.clone(),
+            base_url: self.base_url.clone(),
+        }
+    }
+}
+
 impl Default for ShikicrateClient {
     fn default() -> Self {
-        Self::new().unwrap()
+        Self::new().expect("Failed to create ShikicrateClient with default settings")
     }
 }
