@@ -4,7 +4,7 @@ use serde_json::json;
 use std::sync::Arc;
 use std::time::Duration;
 
-const API_BASE_URL: &str = "https://shikimori.one/api/graphql";
+const API_BASE_URL: &str = "https://shikimori.io/api/graphql";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const RETRY_DELAYS: [Duration; 3] = [
     Duration::from_secs(1),
@@ -66,8 +66,8 @@ impl ShikicrateClient {
         use reqwest::header::{HeaderMap, HeaderValue};
         let mut headers = HeaderMap::new();
         
-        headers.insert("Origin", HeaderValue::from_static("https://shikimori.one"));
-        headers.insert("Referer", HeaderValue::from_static("https://shikimori.one/"));
+        headers.insert("Origin", HeaderValue::from_static("https://shikimori.io"));
+        headers.insert("Referer", HeaderValue::from_static("https://shikimori.io/"));
         headers.insert("X-Requested-With", HeaderValue::from_static("XMLHttpRequest"));
         headers.insert("Accept", HeaderValue::from_static("application/json"));
         headers.insert("Content-Type", HeaderValue::from_static("application/json"));
@@ -116,8 +116,8 @@ impl ShikicrateClient {
         let response = self
             .client
             .post(&self.base_url)
-            .header("Origin", "https://shikimori.one")
-            .header("Referer", "https://shikimori.one/")
+            .header("Origin", "https://shikimori.io")
+            .header("Referer", "https://shikimori.io/")
             .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
             .json(&body)
             .send()
@@ -185,7 +185,7 @@ impl ShikicrateClient {
         T: serde::de::DeserializeOwned,
         Q: serde::Serialize,
     {
-        let url = format!("https://shikimori.one/api/{}", path);
+        let url = format!("https://shikimori.io/api/{}", path);
         let mut req = self.client.get(&url);
         
         if let Some(q) = query {

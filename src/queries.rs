@@ -409,7 +409,7 @@ const CHARACTERS_QUERY: &str = r#"
 "#;
 
 const CHARACTERS_BY_IDS_QUERY: &str = r#"
-  query GetCharactersByIds($ids: [ID!]) {
+  query GetCharactersByIds($ids: String) {
     characters(ids: $ids) {
       id
       name
@@ -424,7 +424,7 @@ const CHARACTERS_BY_IDS_QUERY: &str = r#"
 "#;
 
 const CHARACTER_DETAILS_QUERY: &str = r#"
-  query GetCharacterDetails($ids: [ID!]) {
+  query GetCharacterDetails($ids: String) {
     characters(ids: $ids) {
       id
       malId
@@ -524,7 +524,7 @@ impl ShikicrateClient {
     fn val_lim(limit: Option<i32>) -> Result<()> {
         if let Some(limit) = limit {
             if limit <= 0 {
-                return Err(ShikicrateError::Validation("limit must be greater than 0".to_string()));
+                return Err(ShikicrateError::Validation("Лимит должен быть больше 0".to_string()));
             }
         }
         Ok(())
@@ -533,7 +533,7 @@ impl ShikicrateClient {
     fn val_pg(page: Option<i32>) -> Result<()> {
         if let Some(page) = page {
             if page < 1 {
-                return Err(ShikicrateError::Validation("page must be greater than or equal to 1".to_string()));
+                return Err(ShikicrateError::Validation("Страница должна быть не меньше 1".to_string()));
             }
         }
         Ok(())
@@ -542,7 +542,7 @@ impl ShikicrateClient {
     fn val_ids(ids: Option<&Vec<String>>) -> Result<()> {
         if let Some(ids) = ids {
             if ids.is_empty() {
-                return Err(ShikicrateError::Validation("ids must not be empty".to_string()));
+                return Err(ShikicrateError::Validation("Список ID не должен быть пустым".to_string()));
             }
         }
         Ok(())
@@ -692,7 +692,7 @@ impl ShikicrateClient {
             query,
             || {
                 if let Some(ids) = params.ids {
-                    json!({ "ids": ids })
+                    json!({ "ids": ids.join(",") })
                 } else {
                     Self::build_vars(params.search.clone(), params.page, params.limit)
                 }
@@ -705,7 +705,7 @@ impl ShikicrateClient {
     pub async fn character_detail(&self, id: i64) -> Result<Option<CharacterFull>> {
         let mut characters = self.fetch(
             CHARACTER_DETAILS_QUERY.to_string(),
-            || json!({ "ids": [id.to_string()] }),
+            || json!({ "ids": id.to_string() }),
             "characters",
         )
         .await?;

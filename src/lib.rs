@@ -49,7 +49,7 @@
 //!     // Создание клиента с кастомными настройками
 //!     let client = ShikicrateClientBuilder::new()
 //!         .timeout(Duration::from_secs(60))
-//!         .base_url("https://shikimori.one/api/graphql".to_string())
+//!         .base_url("https://shikimori.io/api/graphql".to_string())
 //!         .build()?;
 //!
 //!     // Использование клиента...

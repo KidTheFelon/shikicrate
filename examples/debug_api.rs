@@ -14,9 +14,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Отправка запроса...");
     
     let response = client
-        .post("https://shikimori.one/api/graphql")
-        .header(ORIGIN, "https://shikimori.one")
-        .header(REFERER, "https://shikimori.one/")
+        .post("https://shikimori.io/api/graphql")
+        .header(ORIGIN, "https://shikimori.io")
+        .header(REFERER, "https://shikimori.io/")
         .header("X-Requested-With", "XMLHttpRequest")
         .header(ACCEPT, "application/json")
         .header(CONTENT_TYPE, "application/json")
