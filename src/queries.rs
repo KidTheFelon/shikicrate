@@ -745,6 +745,12 @@ impl ShikicrateClient {
         self.get_rest("genres", None::<serde_json::Value>).await
     }
 
+    /// Получение похожего аниме через REST API Shikimori
+    pub async fn similar_anime(&self, id: i64) -> Result<Vec<SimilarAnime>> {
+        let path = format!("animes/{}/similar", id);
+        self.get_rest(&path, None::<serde_json::Value>).await
+    }
+
     pub async fn user_rates(&self, params: UserRateSearchParams) -> Result<Vec<UserRate>> {
         Self::val_pg(params.page)?;
         Self::val_lim(params.limit)?;

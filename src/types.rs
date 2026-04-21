@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt;
+use ts_rs::TS;
 
 fn deser_id<'de, D>(deserializer: D) -> Result<i64, D::Error>
 where
@@ -91,7 +92,8 @@ where
 /// Дата с опциональными компонентами.
 ///
 /// Используется для дат выхода аниме/манги, дат рождения людей и т.д.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Date {
     /// Год (например, 2024).
     pub year: Option<i32>,
@@ -109,7 +111,8 @@ pub struct Date {
 /// Постер (изображение) для аниме, манги, персонажа или человека.
 ///
 /// Содержит ссылки на изображения разных размеров.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Poster {
     /// ID постера в системе Shikimori.
     #[serde(deserialize_with = "deser_opt_id")]
@@ -137,7 +140,8 @@ pub struct Poster {
 }
 
 /// Жанр аниме или манги.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Genre {
     /// ID жанра в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -154,7 +158,8 @@ pub struct Genre {
 }
 
 /// Студия аниме.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Studio {
     /// ID студии в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -169,7 +174,8 @@ pub struct Studio {
 }
 
 /// Издательство манги.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Publisher {
     /// ID издательства в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -179,7 +185,8 @@ pub struct Publisher {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ExternalLink {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
@@ -191,7 +198,8 @@ pub struct ExternalLink {
     pub updated_at: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Person {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -200,7 +208,8 @@ pub struct Person {
     pub poster: Option<Poster>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct PersonRole {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -211,7 +220,8 @@ pub struct PersonRole {
     pub person: Person,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Character {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -220,7 +230,8 @@ pub struct Character {
     pub poster: Option<Poster>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct CharacterRole {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -233,7 +244,8 @@ pub struct CharacterRole {
     pub manga: Option<Manga>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct RelatedAnime {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
@@ -242,7 +254,8 @@ pub struct RelatedAnime {
     pub poster: Option<Poster>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct RelatedManga {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
@@ -251,7 +264,31 @@ pub struct RelatedManga {
     pub poster: Option<Poster>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Похожее аниме из REST API Shikimori (/api/animes/{id}/similar)
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct SimilarAnime {
+    #[serde(deserialize_with = "deser_opt_id")]
+    pub id: Option<i64>,
+    pub name: Option<String>,
+    pub russian: Option<String>,
+    pub kind: Option<String>,
+    pub status: Option<String>,
+    pub image: Option<SimilarAnimeImage>,
+}
+
+/// Изображение для похожего аниме из REST API
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct SimilarAnimeImage {
+    pub original: Option<String>,
+    pub preview: Option<String>,
+    pub x48: Option<String>,
+    pub x96: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Related {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -263,7 +300,8 @@ pub struct Related {
     pub relation_text: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Video {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -276,7 +314,8 @@ pub struct Video {
     pub image_url: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Screenshot {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -288,13 +327,15 @@ pub struct Screenshot {
     pub x332_url: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct ScoreStat {
     pub score: i32,
     pub count: i32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct StatusStat {
     pub status: String,
     pub count: i32,
@@ -331,7 +372,8 @@ pub struct StatusStat {
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Anime {
     /// ID аниме в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -478,7 +520,8 @@ pub struct Anime {
 ///
 /// Структура похожа на `Anime`, но содержит специфичные для манги поля
 /// (например, `volumes`, `chapters`, `publishers` вместо `studios`).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Manga {
     /// ID манги в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -596,7 +639,8 @@ pub struct Manga {
 ///
 /// Содержит все доступные данные о персонаже: имена, описания, постеры,
 /// флаги участия в аниме/манге/ранобэ.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct CharacterFull {
     /// ID персонажа в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -660,7 +704,8 @@ pub struct CharacterFull {
 ///
 /// Содержит все доступные данные о человеке: имена, даты рождения/смерти,
 /// роли (сейю, мангака, продюсер), постеры и другую информацию.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct PersonFull {
     /// ID человека в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
