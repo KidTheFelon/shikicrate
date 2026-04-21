@@ -13,6 +13,7 @@ const ANIMES_QUERY: &str = r#"
       score
       status
       episodes
+      episodesAired
       poster {
         id
         mainUrl
@@ -650,7 +651,7 @@ impl ShikicrateClient {
             MANGAS_QUERY.to_string()
         };
 
-        self.fetch(query, || vars.clone(), "mangas").await
+        self.fetch(query, || vars, "mangas").await
     }
 
     pub async fn manga_detail(&self, id: i64) -> Result<Option<Manga>> {
