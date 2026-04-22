@@ -116,25 +116,28 @@ const ANIME_DETAILS_QUERY: &str = r#"
       related {
         id
         relationKind
-        relationText
         anime {
           id
           name
           russian
+          airedOn {
+            year
+          }
           poster {
             id
             mainUrl
-            previewUrl
           }
         }
         manga {
           id
           name
           russian
+          airedOn {
+            year
+          }
           poster {
             id
             mainUrl
-            previewUrl
           }
         }
       }
@@ -265,25 +268,28 @@ const MANGA_DETAILS_QUERY: &str = r#"
       related {
         id
         relationKind
-        relationText
         anime {
           id
           name
           russian
+          airedOn {
+            year
+          }
           poster {
             id
             mainUrl
-            previewUrl
           }
         }
         manga {
           id
           name
           russian
+          airedOn {
+            year
+          }
           poster {
             id
             mainUrl
-            previewUrl
           }
         }
       }
@@ -464,6 +470,80 @@ const USER_RATES_QUERY: &str = r#"
         name
       }
       createdAt
+    }
+  }
+"#;
+
+const RELATED_ANIME_QUERY: &str = r#"
+  query GetRelatedAnime($ids: String) {
+    animes(ids: $ids, limit: 1) {
+      id
+      related {
+        id
+        relationKind
+        relationText
+        anime {
+          id
+          name
+          russian
+          airedOn {
+            year
+          }
+          poster {
+            id
+            mainUrl
+          }
+        }
+        manga {
+          id
+          name
+          russian
+          airedOn {
+            year
+          }
+          poster {
+            id
+            mainUrl
+          }
+        }
+      }
+    }
+  }
+"#;
+
+const RELATED_MANGA_QUERY: &str = r#"
+  query GetRelatedManga($ids: String) {
+    mangas(ids: $ids, limit: 1) {
+      id
+      related {
+        id
+        relationKind
+        relationText
+        anime {
+          id
+          name
+          russian
+          airedOn {
+            year
+          }
+          poster {
+            id
+            mainUrl
+          }
+        }
+        manga {
+          id
+          name
+          russian
+          airedOn {
+            year
+          }
+          poster {
+            id
+            mainUrl
+          }
+        }
+      }
     }
   }
 "#;
@@ -749,6 +829,56 @@ impl ShikicrateClient {
     pub async fn similar_anime(&self, id: i64) -> Result<Vec<SimilarAnime>> {
         let path = format!("animes/{}/similar", id);
         self.get_rest(&path, None::<serde_json::Value>).await
+    }
+
+    /// Получение связанных произведений через GraphQL
+    pub async fn related_anime(&self, id: i64) -> Result<Vec<Related>> {
+        let response: serde_json::Value = self.execute_query(RELATED_ANIME_QUERY, Some(json!({ "ids": id.to_string() }))).await?;
+
+        let animes = response.get("animes")
+            .and_then(|v| v.as_array())
+            .ok_or_else(|| ShikicrateError::GraphQL {
+                message: "No animes in response".to_string(),
+                errors: None,
+            })?;
+
+        let anime = animes.first()
+            .ok_or_else(|| ShikicrateError::GraphQL {
+                message: "Anime not found".to_string(),
+                errors: None,
+            })?;
+
+        let related = anime.get("related")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+
+        serde_json::from_value(json!(related)).map_err(ShikicrateError::Serialization)
+    }
+
+    /// Получение связанных произведений для манги через GraphQL
+    pub async fn related_manga(&self, id: i64) -> Result<Vec<Related>> {
+        let response: serde_json::Value = self.execute_query(RELATED_MANGA_QUERY, Some(json!({ "ids": id.to_string() }))).await?;
+
+        let mangas = response.get("mangas")
+            .and_then(|v| v.as_array())
+            .ok_or_else(|| ShikicrateError::GraphQL {
+                message: "No mangas in response".to_string(),
+                errors: None,
+            })?;
+
+        let manga = mangas.first()
+            .ok_or_else(|| ShikicrateError::GraphQL {
+                message: "Manga not found".to_string(),
+                errors: None,
+            })?;
+
+        let related = manga.get("related")
+            .and_then(|v| v.as_array())
+            .cloned()
+            .unwrap_or_default();
+
+        serde_json::from_value(json!(related)).map_err(ShikicrateError::Serialization)
     }
 
     pub async fn user_rates(&self, params: UserRateSearchParams) -> Result<Vec<UserRate>> {

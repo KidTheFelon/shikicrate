@@ -89,11 +89,148 @@ where
     deserializer.deserialize_option(OptionIdVisitor)
 }
 
+fn deser_date<'de, D>(deserializer: D) -> Result<Date, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct DateVisitor;
+
+    impl<'de> serde::de::Visitor<'de> for DateVisitor {
+        type Value = Date;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a Date object or a date string")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            // Parse date string like "2001-07-12"
+            let parts: Vec<&str> = v.split('-').collect();
+            if parts.len() >= 3 {
+                let year = parts[0].parse::<i32>().ok();
+                let month = parts[1].parse::<i32>().ok();
+                let day = parts[2].parse::<i32>().ok();
+                Ok(Date {
+                    year,
+                    month,
+                    day,
+                    date: Some(v.to_string()),
+                })
+            } else {
+                Ok(Date {
+                    year: None,
+                    month: None,
+                    day: None,
+                    date: Some(v.to_string()),
+                })
+            }
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::MapAccess<'de>,
+        {
+            let mut year = None;
+            let mut month = None;
+            let mut day = None;
+            let mut date = None;
+
+            while let Some(key) = map.next_key::<String>()? {
+                match key.as_str() {
+                    "year" => year = map.next_value()?,
+                    "month" => month = map.next_value()?,
+                    "day" => day = map.next_value()?,
+                    "date" => date = map.next_value()?,
+                    _ => {
+                        let _: serde::de::IgnoredAny = map.next_value()?;
+                    }
+                }
+            }
+
+            Ok(Date { year, month, day, date })
+        }
+    }
+
+    deserializer.deserialize_any(DateVisitor)
+}
+
+fn deser_opt_date<'de, D>(deserializer: D) -> Result<Option<Date>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct OptionDateVisitor;
+
+    impl<'de> serde::de::Visitor<'de> for OptionDateVisitor {
+        type Value = Option<Date>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a Date object, a date string, or null")
+        }
+
+        fn visit_none<E>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            // Parse date string like "2001-07-12"
+            let parts: Vec<&str> = v.split('-').collect();
+            if parts.len() >= 3 {
+                let year = parts[0].parse::<i32>().ok();
+                let month = parts[1].parse::<i32>().ok();
+                let day = parts[2].parse::<i32>().ok();
+                Ok(Some(Date {
+                    year,
+                    month,
+                    day,
+                    date: Some(v.to_string()),
+                }))
+            } else {
+                Ok(Some(Date {
+                    year: None,
+                    month: None,
+                    day: None,
+                    date: Some(v.to_string()),
+                }))
+            }
+        }
+
+        fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::MapAccess<'de>,
+        {
+            let mut year = None;
+            let mut month = None;
+            let mut day = None;
+            let mut date = None;
+
+            while let Some(key) = map.next_key::<String>()? {
+                match key.as_str() {
+                    "year" => year = map.next_value()?,
+                    "month" => month = map.next_value()?,
+                    "day" => day = map.next_value()?,
+                    "date" => date = map.next_value()?,
+                    _ => {
+                        let _: serde::de::IgnoredAny = map.next_value()?;
+                    }
+                }
+            }
+
+            Ok(Some(Date { year, month, day, date }))
+        }
+    }
+
+    deserializer.deserialize_any(OptionDateVisitor)
+}
+
 /// Дата с опциональными компонентами.
 ///
 /// Используется для дат выхода аниме/манги, дат рождения людей и т.д.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Date {
     /// Год (например, 2024).
     pub year: Option<i32>,
@@ -112,7 +249,6 @@ pub struct Date {
 ///
 /// Содержит ссылки на изображения разных размеров.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Poster {
     /// ID постера в системе Shikimori.
     #[serde(deserialize_with = "deser_opt_id")]
@@ -141,7 +277,6 @@ pub struct Poster {
 
 /// Жанр аниме или манги.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Genre {
     /// ID жанра в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -159,7 +294,6 @@ pub struct Genre {
 
 /// Студия аниме.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Studio {
     /// ID студии в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -175,7 +309,6 @@ pub struct Studio {
 
 /// Издательство манги.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Publisher {
     /// ID издательства в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -186,7 +319,6 @@ pub struct Publisher {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct ExternalLink {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
@@ -199,7 +331,6 @@ pub struct ExternalLink {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Person {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -209,7 +340,6 @@ pub struct Person {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct PersonRole {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -221,7 +351,6 @@ pub struct PersonRole {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Character {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -231,7 +360,6 @@ pub struct Character {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct CharacterRole {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -245,28 +373,29 @@ pub struct CharacterRole {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct RelatedAnime {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
     pub name: Option<String>,
     pub russian: Option<String>,
     pub poster: Option<Poster>,
+    #[serde(rename = "airedOn")]
+    pub aired_on: Option<Date>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct RelatedManga {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
     pub name: Option<String>,
     pub russian: Option<String>,
     pub poster: Option<Poster>,
+    #[serde(rename = "airedOn")]
+    pub aired_on: Option<Date>,
 }
 
 /// Похожее аниме из REST API Shikimori (/api/animes/{id}/similar)
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct SimilarAnime {
     #[serde(deserialize_with = "deser_opt_id")]
     pub id: Option<i64>,
@@ -279,7 +408,6 @@ pub struct SimilarAnime {
 
 /// Изображение для похожего аниме из REST API
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct SimilarAnimeImage {
     pub original: Option<String>,
     pub preview: Option<String>,
@@ -288,7 +416,6 @@ pub struct SimilarAnimeImage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Related {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -301,7 +428,6 @@ pub struct Related {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Video {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -315,7 +441,6 @@ pub struct Video {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Screenshot {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
@@ -328,14 +453,12 @@ pub struct Screenshot {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct ScoreStat {
     pub score: i32,
     pub count: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct StatusStat {
     pub status: String,
     pub count: i32,
@@ -373,7 +496,6 @@ pub struct StatusStat {
 /// # }
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Anime {
     /// ID аниме в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -521,7 +643,6 @@ pub struct Anime {
 /// Структура похожа на `Anime`, но содержит специфичные для манги поля
 /// (например, `volumes`, `chapters`, `publishers` вместо `studios`).
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct Manga {
     /// ID манги в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -640,7 +761,6 @@ pub struct Manga {
 /// Содержит все доступные данные о персонаже: имена, описания, постеры,
 /// флаги участия в аниме/манге/ранобэ.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct CharacterFull {
     /// ID персонажа в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
@@ -705,7 +825,6 @@ pub struct CharacterFull {
 /// Содержит все доступные данные о человеке: имена, даты рождения/смерти,
 /// роли (сейю, мангака, продюсер), постеры и другую информацию.
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export)]
 pub struct PersonFull {
     /// ID человека в системе Shikimori.
     #[serde(deserialize_with = "deser_id")]
