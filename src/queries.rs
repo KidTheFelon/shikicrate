@@ -14,6 +14,12 @@ const ANIMES_QUERY: &str = r#"
       status
       episodes
       episodesAired
+      airedOn {
+        year
+        month
+        day
+        date
+      }
       poster {
         id
         mainUrl
@@ -458,16 +464,39 @@ const CHARACTER_DETAILS_QUERY: &str = r#"
 "#;
 
 const USER_RATES_QUERY: &str = r#"
-  query SearchUserRates($page: Int, $limit: Int, $targetType: TargetType, $order: UserRateOrder) {
-    userRates(page: $page, limit: $limit, targetType: $targetType, order: $order) {
+  query SearchUserRates($page: Int, $limit: Int) {
+    userRates(page: $page, limit: $limit) {
       id
+      score
+      status
+      episodes
+      volumes
+      chapters
       anime {
         id
         name
+        russian
+        poster {
+          mainUrl
+        }
+        kind
+        status
+        score
+        episodes
+        episodesAired
       }
       manga {
         id
         name
+        russian
+        poster {
+          mainUrl
+        }
+        kind
+        status
+        score
+        volumes
+        chapters
       }
       createdAt
     }

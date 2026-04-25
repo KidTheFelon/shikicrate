@@ -893,6 +893,21 @@ pub struct UserRate {
     #[serde(deserialize_with = "deser_id")]
     pub id: i64,
 
+    /// Оценка пользователя.
+    pub score: Option<f64>,
+
+    /// Статус просмотра.
+    pub status: String,
+
+    /// Количество просмотренных эпизодов (для аниме).
+    pub episodes: Option<i32>,
+
+    /// Количество прочитанных томов (для манги).
+    pub volumes: Option<i32>,
+
+    /// Количество прочитанных глав (для манги).
+    pub chapters: Option<i32>,
+
     /// Аниме (если оценка относится к аниме).
     pub anime: Option<Anime>,
 
